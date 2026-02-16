@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 920" font-family="Segoe UI, Arial, Helvetica, sans-serif">
+
+  <!-- Background -->
+  <rect width="720" height="920" fill="#ffffff" rx="8"/>
+
+  <!-- Title bar -->
+  <rect x="20" y="12" width="680" height="32" rx="6" fill="#7C3AED"/>
+  <text x="360" y="33" fill="#fff" font-size="13" font-weight="700" text-anchor="middle">Block 2 — Interactive Prompt Builder</text>
+
+  <!-- ═══════ GLOBAL FIELDS ═══════ -->
+
+  <!-- Image folder   label-y=72  field: y=58 h=24 -->
+  <text x="32" y="72" font-size="11" fill="#475569" font-weight="600">Image folder</text>
+  <rect x="140" y="58" width="340" height="24" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="74" font-size="10.5" fill="#1E293B" font-family="Consolas, monospace">streetscapes_nice_2025</text>
+
+  <!-- Role   label-y=104  field: y=90 h=50 → bottom=140 -->
+  <text x="32" y="104" font-size="11" fill="#475569" font-weight="600">Role (global)</text>
+  <rect x="140" y="90" width="548" height="50" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="108" font-size="10" fill="#1E293B">You are an expert urban morphologist analyzing street-level photographs</text>
+  <text x="150" y="122" font-size="10" fill="#1E293B">of French cities. Answer precisely using only what is visible in the image.</text>
+
+  <!-- Nb tasks   label-y=162  field: y=148 h=24 → bottom=172 -->
+  <text x="32" y="162" font-size="11" fill="#475569" font-weight="600">Nb tasks</text>
+  <rect x="140" y="148" width="120" height="24" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="140" y="148" width="60" height="24" rx="4" fill="#7C3AED" opacity="0.15"/>
+  <circle cx="200" cy="160" r="6" fill="#7C3AED"/>
+  <text x="270" y="164" font-size="10" fill="#64748B">2</text>
+
+  <!-- ═══════ TASK #1  box: y=188  need to fit through cost warning ═══════ -->
+  <!-- Content plan inside task #1:
+       Title:         y=210
+       Type:          y=228  (field y=216 h=22 → 238)
+       Col:           y=256  (field y=242 h=22 → 264)
+       Task:          y=282  (field y=268 h=40 → 308)
+       Theory:        y=324  (field y=312 h=48 → 360)
+       Format:        y=378  (field y=364 h=24 → 388)
+       Help:          y=404
+       HR + Adv:      y=418 line, y=434 text
+       HR + Cons:     y=450 line, y=466 text
+       Cons options:  y=486
+       Cost warning:  y=506
+       Bottom pad:    y=518
+       Box height = 518 - 188 = 330
+  -->
+  <rect x="20" y="188" width="680" height="330" rx="8" fill="#fff" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <text x="36" y="210" font-size="12" font-weight="700" fill="#1E293B">Task #1</text>
+
+  <!-- Type dropdown -->
+  <text x="36" y="232" font-size="10.5" fill="#475569" font-weight="600">Type 1</text>
+  <rect x="140" y="218" width="260" height="22" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="233" font-size="10" fill="#1E293B">Numeric (counts, scores)</text>
+  <text x="386" y="233" font-size="9" fill="#94A3B8">▼</text>
+
+  <!-- Col -->
+  <text x="36" y="258" font-size="10.5" fill="#475569" font-weight="600">Col 1</text>
+  <rect x="140" y="244" width="260" height="22" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="259" font-size="10" fill="#1E293B" font-family="Consolas, monospace">frontage_length</text>
+
+  <!-- Task -->
+  <text x="36" y="284" font-size="10.5" fill="#475569" font-weight="600">Task 1</text>
+  <rect x="140" y="270" width="548" height="40" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="286" font-size="10" fill="#1E293B">Estimate the total length in meters of the building frontage</text>
+  <text x="150" y="300" font-size="10" fill="#1E293B">visible on the ground floor of this street photograph.</text>
+
+  <!-- Theory -->
+  <text x="36" y="326" font-size="10.5" fill="#475569" font-weight="600">Theory 1</text>
+  <rect x="140" y="314" width="548" height="48" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="330" font-size="10" fill="#1E293B">A frontage is the face of a building at street level. Use parked cars</text>
+  <text x="150" y="344" font-size="10" fill="#1E293B">(~4.5m), doors (~0.9m) or windows (~1.2m) as scale references.</text>
+
+  <!-- Format -->
+  <text x="36" y="380" font-size="10.5" fill="#475569" font-weight="600">Format 1</text>
+  <rect x="140" y="366" width="548" height="24" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="382" font-size="10" fill="#1E293B">Answer with a single integer (meters). Example: 15</text>
+
+  <!-- Help text -->
+  <text x="140" y="406" font-size="9" fill="#94A3B8" font-style="italic">Numeric: extracts numbers | Category: returns classification text | Boolean: normalizes to 1/0 | Text: raw response</text>
+
+  <!-- Advanced Reasoning section (unchecked) -->
+  <line x1="36" y1="418" x2="688" y2="418" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="56" y="436" font-size="10.5" font-weight="700" fill="#475569">🧠 Advanced Reasoning</text>
+  <rect x="190" y="424" width="14" height="14" rx="2" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="210" y="436" font-size="10" fill="#475569">Enable advanced reasoning (chain-of-thought)</text>
+
+  <!-- Consensus section (checked) -->
+  <line x1="36" y1="450" x2="688" y2="450" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="56" y="468" font-size="10.5" font-weight="700" fill="#475569">🔄 Consensus Validation</text>
+  <rect x="190" y="456" width="14" height="14" rx="2" fill="#7C3AED" stroke="#7C3AED" stroke-width="1"/>
+  <text x="193" y="467" font-size="9" fill="#fff" font-weight="700">✓</text>
+  <text x="210" y="468" font-size="10" fill="#1E293B">Enable consensus validation</text>
+
+  <!-- Consensus options row -->
+  <text x="210" y="490" font-size="10" fill="#475569">Runs</text>
+  <rect x="248" y="478" width="80" height="20" rx="3" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="258" y="492" font-size="9.5" fill="#1E293B">3 runs</text>
+  <text x="316" y="492" font-size="8" fill="#94A3B8">▼</text>
+  <text x="348" y="490" font-size="10" fill="#475569">Tolerance %</text>
+  <rect x="430" y="478" width="60" height="20" rx="3" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="440" y="492" font-size="9.5" fill="#1E293B">10.0</text>
+
+  <!-- Cost warning -->
+  <text x="210" y="510" font-size="9" fill="#EA580C" font-weight="600">⚠️ Cost: 3x API calls per image for this task</text>
+
+  <!-- ═══════ TASK #2  box: y=530 ═══════ -->
+  <!-- Content plan:
+       Title:        y=552
+       Type:         y=570  (field y=556 h=22 → 578)
+       Col:          y=596  (field y=582 h=22 → 604)
+       Task:         y=622  (field y=608 h=28 → 636)
+       Format:       y=654  (field y=640 h=24 → 664)  DISABLED
+       HR + Adv:     y=676 line, y=692 text (checked)
+       Adv help:     y=710
+       Adv preview:  y=720 rect h=24 → 744
+       Bottom pad:   y=756
+       Box height = 756 - 530 = 226
+  -->
+  <rect x="20" y="530" width="680" height="226" rx="8" fill="#fff" stroke="#E2E8F0" stroke-width="1.5"/>
+
+  <text x="36" y="552" font-size="12" font-weight="700" fill="#1E293B">Task #2</text>
+
+  <!-- Type -->
+  <text x="36" y="570" font-size="10.5" fill="#475569" font-weight="600">Type 2</text>
+  <rect x="140" y="556" width="260" height="22" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="571" font-size="10" fill="#1E293B">Category (classifications)</text>
+  <text x="386" y="571" font-size="9" fill="#94A3B8">▼</text>
+
+  <!-- Col -->
+  <text x="36" y="596" font-size="10.5" fill="#475569" font-weight="600">Col 2</text>
+  <rect x="140" y="582" width="260" height="22" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="597" font-size="10" fill="#1E293B" font-family="Consolas, monospace">vegetation_type</text>
+
+  <!-- Task -->
+  <text x="36" y="622" font-size="10.5" fill="#475569" font-weight="600">Task 2</text>
+  <rect x="140" y="608" width="548" height="28" rx="4" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="150" y="626" font-size="10" fill="#1E293B">Classify the dominant vegetation type visible in this street scene.</text>
+
+  <!-- Format - disabled -->
+  <text x="36" y="654" font-size="10.5" fill="#475569" font-weight="600">Format 2</text>
+  <rect x="140" y="640" width="548" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="150" y="656" font-size="10" fill="#94A3B8" font-style="italic">(disabled — overridden by advanced reasoning)</text>
+
+  <!-- Advanced Reasoning (checked, with preview) -->
+  <line x1="36" y1="674" x2="688" y2="674" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="56" y="692" font-size="10.5" font-weight="700" fill="#475569">🧠 Advanced Reasoning</text>
+  <rect x="190" y="680" width="14" height="14" rx="2" fill="#7C3AED" stroke="#7C3AED" stroke-width="1"/>
+  <text x="193" y="691" font-size="9" fill="#fff" font-weight="700">✓</text>
+  <text x="210" y="692" font-size="10" fill="#1E293B">Enable advanced reasoning (chain-of-thought)</text>
+
+  <text x="210" y="710" font-size="9" fill="#64748B" font-style="italic">🧠 Max tokens automatically set to 1024. Creates additional column for reasoning text.</text>
+
+  <!-- Format preview box -->
+  <rect x="210" y="718" width="470" height="26" rx="4" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1"/>
+  <text x="220" y="735" font-size="9" fill="#5B21B6" font-weight="600">Format (auto):</text>
+  <text x="310" y="735" font-size="9" fill="#5B21B6" font-family="Consolas, monospace">First, describe ... ANSWER: &lt;category number&gt;</text>
+
+  <!-- ═══════ GENERATION PARAMETERS ═══════ -->
+  <rect x="20" y="770" width="680" height="80" rx="8" fill="#FAFBFC" stroke="#E2E8F0" stroke-width="1"/>
+
+  <!-- Row 1 -->
+  <rect x="36" y="784" width="12" height="12" rx="2" fill="#7C3AED" stroke="#7C3AED" stroke-width="1"/>
+  <text x="39" y="794" font-size="8" fill="#fff" font-weight="700">✓</text>
+  <text x="54" y="794" font-size="10" fill="#475569">Enable sampling</text>
+
+  <text x="180" y="794" font-size="10" fill="#475569">Temperature</text>
+  <rect x="260" y="782" width="60" height="16" rx="3" fill="#E2E8F0"/>
+  <rect x="260" y="782" width="18" height="16" rx="3" fill="#7C3AED"/>
+  <text x="330" y="794" font-size="10" fill="#1E293B">0.3</text>
+
+  <text x="370" y="794" font-size="10" fill="#475569">Top-p</text>
+  <rect x="410" y="782" width="60" height="16" rx="3" fill="#E2E8F0"/>
+  <rect x="410" y="782" width="54" height="16" rx="3" fill="#7C3AED"/>
+  <text x="480" y="794" font-size="10" fill="#1E293B">0.9</text>
+
+  <text x="520" y="794" font-size="10" fill="#475569">Max tokens</text>
+  <rect x="600" y="782" width="60" height="16" rx="3" fill="#E2E8F0"/>
+  <rect x="600" y="782" width="6" height="16" rx="3" fill="#7C3AED"/>
+  <text x="668" y="794" font-size="10" fill="#1E293B">50</text>
+
+  <!-- Row 2 -->
+  <rect x="36" y="808" width="12" height="12" rx="2" fill="#fff" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="54" y="818" font-size="10" fill="#475569">Use fixed seed</text>
+  <rect x="160" y="806" width="50" height="16" rx="3" fill="#F1F5F9" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="170" y="818" font-size="10" fill="#94A3B8">42</text>
+
+  <rect x="260" y="808" width="12" height="12" rx="2" fill="#7C3AED" stroke="#7C3AED" stroke-width="1"/>
+  <text x="263" y="818" font-size="8" fill="#fff" font-weight="700">✓</text>
+  <text x="278" y="818" font-size="10" fill="#475569">Display images during scoring</text>
+
+  <!-- Apply button -->
+  <rect x="260" y="862" width="200" height="30" rx="6" fill="#16A34A"/>
+  <text x="360" y="881" fill="#fff" font-size="12" font-weight="700" text-anchor="middle">Apply paths + tasks + settings</text>
+
+  <!-- ═══════ CAPTION ═══════ -->
+  <text x="360" y="912" fill="#555" font-size="10.5" text-anchor="middle">
+    <tspan font-weight="700">Figure 2.</tspan> Block 2 prompt builder showing a two-task urban morphology configuration with consensus and advanced reasoning.
+  </text>
+
+</svg>
