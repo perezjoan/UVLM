@@ -33,11 +33,9 @@ It requires **no local hardware** — everything runs on Google Colab with free-
 
 UVLM is organized into **three sequential blocks**, each handling a distinct stage of the benchmarking workflow:
 
-| Block | Function | Execution |
-|-------|----------|-----------|
-| **Block 1** | Model loading & hardware configuration | Run once per session |
-| **Block 2** | Inference configuration & prompt builder | Re-run to modify tasks |
-| **Block 3** | Batch execution engine | Re-run for each image set |
+<p align="center">
+  <img src="figure1_architecture.svg" alt="UVLM Architecture Diagram" width="100%"/>
+</p>
 
 ### Supported Models
 
@@ -126,6 +124,7 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 | File | Description |
 |------|-------------|
 | [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
+| [`figure1_architecture.svg`](figure1_architecture.svg) | Architecture diagram (Figure 1) |
 | [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
 | [`NOTICE.md`](NOTICE.md) | Third-party licenses and attributions |
 | [`VERSIONS.txt`](VERSIONS.txt) | Version history |
