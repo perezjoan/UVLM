@@ -1,0 +1,52 @@
+UVLM — Version History
+======================
+
+v2.2.1 (February 2026) — Current release
+-----------------------------------------
+- Fixed: NA value handling in consensus validation. The compute_consensus()
+  function now properly filters out NA values (failed parses) before majority
+  voting, ensuring that parsing failures do not influence the final answer.
+  Agreement ratio is still computed over all runs (including NA) to preserve
+  the reliability metric.
+- Added: is_na_value() helper recognizing "NA", "N/A", "NAN", "NONE", "NULL",
+  empty strings, and None values.
+
+v2.2 (January 2026)
+--------------------
+- Added: Advanced reasoning mode (chain-of-thought prompting).
+  - Per-task checkbox to enable structured CoT prompting.
+  - Auto-generated format instruction with "ANSWER: <value>" pattern.
+  - Max token budget override: 1024 tokens (vs default 50).
+  - Response parser scans last 5 lines for ANSWER: pattern.
+  - Graceful fallback to standard parsing if format not followed.
+  - Reasoning trace stored in {column}_reasoning CSV column.
+- Added: Disabled advanced reasoning for "text" task type.
+
+v2.1 (December 2025)
+---------------------
+- Added: Consensus validation feature.
+  - Per-task toggle with configurable runs (2 or 3, default: 2).
+  - Majority voting across all runs (equal peer voting).
+  - Percentage-based numeric tolerance for grouping similar values.
+  - Output columns: {col}_consensus, {col}_agreement, {col}_runs.
+  - Consensus not available for "text" task type.
+
+v2.0 (November 2025)
+---------------------
+- Added: Multi-task prompt builder with widget-based UI (up to 10 tasks).
+- Added: Four task types: numeric, category, boolean, text.
+- Added: Four-element prompt structure: role, task, theory, format.
+- Added: Batch execution engine (Block 3) with image folder iteration.
+- Added: Resume mode: skip already-processed images.
+- Added: CSV schema upgrading: append new task columns to existing CSV.
+- Added: Per-task error handling (errors logged as "NA").
+- Added: Periodic checkpoint saves (every 5 images).
+
+v1.0 (October 2025)
+--------------------
+- Initial release.
+- Dual-backend model loader: LLaVA-NeXT and Qwen2.5-VL.
+- Single-task inference with basic response parsing.
+- Precision modes: FP16, 8-bit, 4-bit quantization (BitsAndBytes).
+- Device placement: GPU-only, auto, CPU offload.
+- Hugging Face token authentication support.
