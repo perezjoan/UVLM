@@ -74,7 +74,7 @@ UVLM runs entirely in **Google Colab** — no local installation needed.
 
 1. **Open the notebook** in Google Colab:
 
-   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/perezjoan/UVLM/blob/main/UVLM_v2_2.ipynb)
+   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/perezjoan/UVLM/blob/main/UVLM.ipynb)
 
 2. **Select a GPU runtime**: `Runtime` → `Change runtime type` → `T4 GPU`
 
@@ -125,7 +125,7 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 
 | File | Description |
 |------|-------------|
-| [`UVLM_v2_2.ipynb`](UVLM_v2_2.ipynb) | Main notebook (all three blocks) |
+| [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
 | [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
 | [`NOTICE.md`](NOTICE.md) | Third-party licenses and attributions |
 | [`VERSIONS.txt`](VERSIONS.txt) | Version history |
