@@ -64,6 +64,14 @@ UVLM is organized into **three sequential blocks**, each handling a distinct sta
 | `boolean` | Yes/no answers | Normalizes to 1/0 |
 | `text` | Free-form responses | Returns cleaned text |
 
+### Prompt Builder
+
+The interactive form in Block 2 lets you define up to 10 analysis tasks with per-task controls for task type, prompt structure, consensus validation, and chain-of-thought reasoning:
+
+<p align="center">
+  <img src="figure2_prompt_form.svg" alt="UVLM Prompt Builder Example" width="100%"/>
+</p>
+
 ---
 
 ## 🚀 Quick Start
@@ -125,6 +133,7 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 |------|-------------|
 | [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
 | [`figure1_architecture.svg`](figure1_architecture.svg) | Architecture diagram (Figure 1) |
+| [`figure2_prompt_form.svg`](figure2_prompt_form.svg) | Prompt builder example (Figure 2) |
 | [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
 | [`NOTICE.md`](NOTICE.md) | Third-party licenses and attributions |
 | [`VERSIONS.txt`](VERSIONS.txt) | Version history |
@@ -137,13 +146,11 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 
 If you use UVLM in your research, please cite:
 
-> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. SoftwareX. *(submitted)*
+> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. *(Draft)*
 
 ### Related Publications
 
 > Perez, J. and Fusco, G. (2025). *Streetscape Analysis with Generative AI (SAGAI): Vision-Language Assessment and Mapping of Urban Scenes*. Geomatica, 77(2), 100063. Available at: https://www.sciencedirect.com/science/article/pii/S1195103625000199
-
-> Fusco, G., et al. (2024). *Guiding principles for the 15-minute city in peripheral areas: the emc2 model*. In: AESOP 2024 Proceedings, Paris, pp. 690–707.
 
 ---
 
