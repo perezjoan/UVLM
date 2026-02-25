@@ -9,7 +9,7 @@ UVLM is distributed as a main Colab notebook (`UVLM.ipynb`) plus two pre-configu
 **Current version**: v2.2.2  
 **License**: Apache License 2.0  
 **Repository**: https://github.com/perezjoan/UVLM  
-**Paper**: Perez, J., Fusco, G. (2026). UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking. *SoftwareX*. [Submitted]
+**Paper**: Perez, J., Fusco, G. (2026). UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking. *Draft*.
 
 ---
 
@@ -461,24 +461,6 @@ Example: `Bench_Qwen2.5-VL-7B-Instruct_Tesla_T4_reasoning.csv`
 - **API mode**: Cloud deployment for integration with automated pipelines
 - **Automatic prompt optimization**: Reduce prompt engineering burden
 - **SAGAI integration**: UVLM as the VLM inference engine within the SAGAI workflow
-
----
-
-## 9. References
-
-1. Liu, H., Li, C., Wu, Q., Lee, Y.J. (2024). Improved Baselines with Visual Instruction Tuning. *CVPR*, pp. 26296–26306.
-2. Bai, S., et al. (2025). Qwen2.5-VL Technical Report. *arXiv:2502.13923*.
-3. Perez, J., Fusco, G. (2025). Streetscape Analysis with Generative AI (SAGAI). *Geomatica* 77, 100063.
-4. Fusco, G., et al. (2024). Guiding principles for the 15-minute city in peripheral areas: the emc2 model. *AESOP 2024*, pp. 690–707.
-5. Wolf, T., et al. (2020). Transformers: State-of-the-Art Natural Language Processing. *EMNLP 2020*, pp. 38–45.
-6. Dettmers, T., et al. (2022). GPT3.int8(): 8-bit Matrix Multiplication for Transformers at Scale. *NeurIPS 2022*.
-7. Wei, J., et al. (2022). Chain-of-Thought Prompting Elicits Reasoning in Large Language Models. *NeurIPS 2022*.
-8. Wang, X., et al. (2023). Self-Consistency Improves Chain of Thought Reasoning in Language Models. *ICLR 2023*.
-9. Li, B., et al. (2024). LLaVA-NeXT: Improved Reasoning, OCR, and World Knowledge. Blog post.
-10. Radford, A., et al. (2021). Learning Transferable Visual Models From Natural Language Supervision. *ICML 2021*, pp. 8748–8763.
-11. Perez, J., Fusco, G. (2025). PPCA: A Python-based tool for worldwide geospatial population analysis. *SoftwareX* 31, 102245.
-12. Li, J., et al. (2023). BLIP-2: Bootstrapping Language-Image Pre-training. *ICML 2023*.
-13. Chen, Z., et al. (2024). InternVL: Scaling up Vision Foundation Models. *CVPR 2024*.
 
 ---
 
