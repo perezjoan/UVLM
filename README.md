@@ -1,7 +1,7 @@
 # UVLM: Universal Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v2.2.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v2.2.2-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
 
@@ -20,8 +20,9 @@ UVLM combines model loading, prompt engineering, and batch evaluation into a sin
 - ✅ **11 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL models, from 3B to 110B parameters
 - 🔧 **Dual-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA or Qwen)
 - 📝 **Multi-task prompt builder** — configure up to 10 analysis tasks per run with a widget-based UI
-- 🔁 **Consensus validation** — majority voting across repeated inferences for improved reliability
-- 🧠 **Advanced reasoning** — chain-of-thought prompting for complex visual analysis tasks
+- 🔁 **Consensus validation** — majority voting across 2–5 repeated inferences for improved reliability
+- 🧠 **Flexible reasoning support** — adjustable token budget (up to 1,500) for custom chain-of-thought prompts, plus a built-in CoT reference mode for benchmarking
+- 🚨 **Truncation detection** — exact token counting flags responses that hit the generation limit, with per-task CSV diagnostics
 - 📊 **Batch execution** — process entire image folders with resume capability and CSV output
 - ⚡ **Quantization support** — FP16, 8-bit, and 4-bit precision via BitsAndBytes
 
@@ -64,14 +65,6 @@ UVLM is organized into **three sequential blocks**, each handling a distinct sta
 | `boolean` | Yes/no answers | Normalizes to 1/0 |
 | `text` | Free-form responses | Returns cleaned text |
 
-### Prompt Builder
-
-The interactive form in Block 2 lets you define up to 10 analysis tasks with per-task controls for task type, prompt structure, consensus validation, and chain-of-thought reasoning:
-
-<p align="center">
-  <img src="figure2_prompt_form.svg" alt="UVLM Prompt Builder Example" width="100%"/>
-</p>
-
 ---
 
 ## 🚀 Quick Start
@@ -86,7 +79,7 @@ UVLM runs entirely in **Google Colab** — no local installation needed.
 
 3. **Run Block 1**: Select a model from the dropdown, choose a precision mode (4-bit recommended), and click "Load model"
 
-4. **Run Block 2**: Define your analysis tasks using the prompt builder form — specify column names, prompts, task types, and optionally enable consensus or advanced reasoning
+4. **Run Block 2**: Define your analysis tasks using the prompt builder form — specify column names, prompts, task types, and optionally enable consensus validation. Adjust the max-token slider (up to 1,500) if your prompts require longer outputs.
 
 5. **Run Block 3**: Point to an image folder on Google Drive and execute — results are saved as CSV
 
@@ -105,11 +98,20 @@ UVLM automatically detects the model family and routes to the correct pipeline:
 
 ### Consensus Validation
 
-Run each task 2–3 times per image, with majority voting to determine the final answer. NA values from failed parses are filtered before voting. Agreement ratio tracks reliability across all runs.
+Run each task 2–5 times per image, with majority voting to determine the final answer. NA values from failed parses are filtered before voting. Agreement ratio tracks reliability across all runs.
 
-### Advanced Reasoning (Chain-of-Thought)
+### Reasoning Support
 
-Enable per-task to trigger structured chain-of-thought prompting. The model first explains its reasoning, then provides a formatted answer (`ANSWER: <value>`). Max token budget increases from 50 to 1024. Graceful fallback to standard parsing if the model doesn't follow the format.
+UVLM supports two approaches to chain-of-thought reasoning:
+
+- **User-defined**: Write task prompts that request step-by-step explanations and use the max-token slider (up to 1,500) to provide adequate generation budget. This gives full control over reasoning structure.
+- **Built-in reference mode**: Enable per-task to trigger a standardized CoT template. The token budget is automatically set to 1,024. Primarily intended for benchmarking — in practice, users are encouraged to design their own reasoning prompts tailored to their specific tasks.
+
+Both approaches store the reasoning trace in a dedicated `{column}_reasoning` CSV column for inspection.
+
+### Truncation Detection
+
+After every inference call, the exact number of generated tokens (counted directly from the model output tensor) is compared against the token limit. Truncated responses are flagged in per-task `{column}_truncated` CSV columns and trigger console warnings, allowing users to identify insufficient token budgets without post-hoc analysis.
 
 ### Resume-Safe Batch Processing
 
@@ -117,13 +119,30 @@ Block 3 detects already-processed images and skips them. New tasks added between
 
 ---
 
-## 🧪 Benchmark Dataset
+## 🧪 Benchmark
 
-A benchmark dataset of **100 French streetscape images** is available for reproducibility:
+A benchmark of **120 French streetscape images** across **8 models × 2 inference modes** (16 configurations) is included:
 
-🔗 **[Download from Zenodo]** *(link to be added upon publication)*
+🔗 **[Dataset on Zenodo]** *(link to be added upon publication)*
 
-This dataset was used in the UVLM paper to evaluate model performance on street frontage measurement, pedestrian entrance counting, and vegetation classification tasks.
+### Key Findings
+
+- **Qwen2.5-VL-32B with reasoning** achieves the best overall proximity score (88.0%)
+- **LLaVA Vicuna 7B standard** is a strong alternative (83.1%) at a fraction of the computation cost
+- Model size does not predict performance: LLaVA 34B (62.2%) ranks last
+- Qwen models have near-perfect parsing reliability (zero failures in standard mode)
+- Advanced reasoning helps Qwen models (+4.7 pp for 32B) but hurts most LLaVA models
+
+Five analysis tasks were benchmarked: sidewalk detection, motor vehicle counting, pedestrian entrance counting, street frontage length estimation, and vegetation type classification.
+
+### Benchmark Notebooks
+
+Two pre-configured notebooks replicate the benchmark without requiring manual prompt setup:
+
+| Notebook | Mode | Max tokens |
+|----------|------|------------|
+| `bench_1_no_reasoning.ipynb` | Standard | 50 |
+| `bench_2_with_reasoning.ipynb` | Advanced reasoning | 1024 |
 
 ---
 
@@ -132,8 +151,12 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 | File | Description |
 |------|-------------|
 | [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
+| [`bench_1_no_reasoning.ipynb`](bench_1_no_reasoning.ipynb) | Benchmark notebook: standard mode |
+| [`bench_2_with_reasoning.ipynb`](bench_2_with_reasoning.ipynb) | Benchmark notebook: reasoning mode |
+| [`Benchmarking_by_human.xlsx`](Benchmarking_by_human.xlsx) | Human ground truth (120 images, 5 tasks) |
+| [`UVLM_Benchmark_Prompts.docx`](UVLM_Benchmark_Prompts.docx) | Complete prompt specifications |
+| [`UVLM_Benchmark_Report.xlsx`](UVLM_Benchmark_Report.xlsx) | Full benchmark results (16 configurations) |
 | [`figure1_architecture.svg`](figure1_architecture.svg) | Architecture diagram (Figure 1) |
-| [`figure2_prompt_form.svg`](figure2_prompt_form.svg) | Prompt builder example (Figure 2) |
 | [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
 | [`NOTICE.md`](NOTICE.md) | Third-party licenses and attributions |
 | [`VERSIONS.txt`](VERSIONS.txt) | Version history |
@@ -146,7 +169,7 @@ This dataset was used in the UVLM paper to evaluate model performance on street 
 
 If you use UVLM in your research, please cite:
 
-> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. *(Draft)*
+> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. arXiv preprint.
 
 ### Related Publications
 
