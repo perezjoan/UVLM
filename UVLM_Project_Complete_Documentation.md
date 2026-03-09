@@ -9,7 +9,7 @@ UVLM is distributed as a main Colab notebook (`UVLM.ipynb`) plus two pre-configu
 **Current version**: v2.2.2  
 **License**: Apache License 2.0  
 **Repository**: https://github.com/perezjoan/UVLM  
-**Paper**: Perez, J., Fusco, G. (2026). UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking. *Draft*.
+**Paper**: Perez, J., Fusco, G. (2026). UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking. *arXiv preprint*.
 
 ---
 
@@ -265,13 +265,13 @@ def compute_consensus(parsed_values, task_type, numeric_tolerance=0.0):
 
 **NA filtering**: The `is_na_value()` helper recognizes "NA", "N/A", "NAN", "NONE", "NULL", empty strings, and `None`. This ensures that parsing failures do not interfere with the voting process, while the agreement ratio is still computed over all runs to preserve the reliability metric.
 
-### 3.4 Advanced Reasoning (Chain-of-Thought)
+### 3.4 Reasoning Support
 
-**Purpose**: Enable multi-step visual reasoning for complex tasks (e.g., estimating distances by counting reference objects).
+UVLM supports two approaches to multi-step visual reasoning:
 
-**Configuration**: Per-task checkbox "Enable advanced reasoning". Disabled for `text` task type.
+**User-defined reasoning**: Users can implement custom chain-of-thought strategies by writing task prompts that request step-by-step explanations, and increasing the max-token slider (up to 1500) to accommodate longer outputs. This gives full control over reasoning structure and token allocation.
 
-**When enabled:**
+**Built-in advanced reasoning mode** (reference implementation): A per-task checkbox enables a standardized CoT template, primarily intended for benchmarking. When enabled:
 
 - The format field is automatically replaced with a structured CoT directive:
 
@@ -286,24 +286,26 @@ ADVANCED_REASONING_FORMATS = {
 }
 ```
 
-- Max tokens is **not** automatically overridden — the user controls `max_new_tokens` via the slider (range 1–1500). A reference constant `ADVANCED_REASONING_RECOMMENDED_TOKENS = 768` is provided based on empirical measurements with Qwen2.5-VL 32B. If `max_new_tokens` is below this threshold, the settings summary prints a warning:  
-  `⚠️ Advanced reasoning enabled but max_tokens=X < recommended 768`
+- Max tokens is automatically overridden to `ADVANCED_REASONING_MAX_TOKENS = 1024` to accommodate the reasoning trace
 - The response parser (`parse_advanced_reasoning_response()`) scans the **last 5 lines** of output for `ANSWER:` pattern (case-insensitive regex)
 - If found: extracts the value and applies the standard type-specific parser
 - If not found: **graceful fallback** to standard parsing on the full response
 - Reasoning trace stored in `{col}_reasoning` CSV column (full text, not truncated)
 
+In practice, users are encouraged to design their own reasoning prompts tailored to their specific tasks rather than relying on the built-in mode, which applies a generic template across all task types.
+
 ### 3.5 Truncation Detection
 
 **Purpose**: Alert the user when a model response was cut off by the token limit, which typically produces incomplete reasoning and unreliable parsed answers.
 
-**Mechanism**: After every inference call, the raw response is tokenized using `processor.tokenizer.encode()` to obtain the exact token count. If `token_count >= max_new_tokens`, the response hit the generation ceiling and is flagged as truncated.
+**Mechanism**: The `run_inference()` function stores the exact number of generated tokens in a global variable `_last_generated_tokens`, computed directly from the model output tensor before any text decoding or cleaning. For LLaVA, this is `len(output[0]) - len(inputs["input_ids"][0])`; for Qwen, `len(generated_ids_trimmed[0])`. After each call, the truncation detector compares this count against the effective token limit:
 
 ```python
-def check_truncation(raw_response: str, max_tokens: int) -> tuple:
-    token_count = len(processor.tokenizer.encode(raw_response, add_special_tokens=False))
-    return token_count >= max_tokens, token_count
+def check_truncation(max_tokens: int) -> tuple:
+    return _last_generated_tokens >= max_tokens, _last_generated_tokens
 ```
+
+This approach avoids re-tokenizing the cleaned response text, which would produce inaccurate counts for LLaVA models where the raw response may still contain prompt fragments after string-based cleaning.
 
 **Applies to all modes**: standard, consensus, and advanced reasoning — not limited to chain-of-thought tasks.
 
@@ -312,7 +314,7 @@ def check_truncation(raw_response: str, max_tokens: int) -> tuple:
 - CSV column `{col}_truncated` for every task (YES/NO)
 - Console alarm: `🚨 {col}: TRUNCATION DETECTED — response used {token_count}/{max_tokens} tokens. Increase max_tokens!`
 
-This allows users to adapt `max_new_tokens` based on their specific prompt, task, and model combination rather than relying on a fixed override.
+This allows users to identify token budget issues across their specific prompt, task, and model combination.
 
 ### 3.6 Response Parsing
 
@@ -390,7 +392,7 @@ def set_seed(seed):
 | v2.1 | Consensus validation feature |
 | v2.2 | Advanced reasoning (chain-of-thought) support |
 | v2.2.1 | NA value filtering fix in consensus voting; `is_na_value()` helper ensures parsing failures do not influence majority vote |
-| v2.2.2 | Truncation detection on all tasks using exact tokenizer count (`{col}_truncated` column + console alarm); advanced reasoning no longer auto-overrides max tokens (reference constant `ADVANCED_REASONING_RECOMMENDED_TOKENS = 768`); max tokens slider range extended to 1500; consensus runs extended to 2–5; checkpoint saves every 3 images; reasoning column no longer truncated; UTF-8 encoding fix; pre-configured benchmark notebooks with dynamic output filenames |
+| v2.2.2 | Truncation detection on all tasks using exact generated token count from model output (`{col}_truncated` column + console alarm); advanced reasoning auto-overrides to `ADVANCED_REASONING_MAX_TOKENS = 1024`; max tokens slider range extended to 1500 for user-defined reasoning; consensus runs extended to 2–5; reasoning column no longer truncated; UTF-8 encoding fix; pre-configured benchmark notebooks with dynamic output filenames |
 
 ---
 
@@ -399,8 +401,8 @@ def set_seed(seed):
 - **120 images** of French street frontages
 - **Zenodo archive**: [link to be added upon publication]
 - **CSV output** for downstream statistical analysis
-- Three prompt complexity levels developed for benchmarking (SIMPLE / MEDIUM / COMPLEX), varying in token budget and detail level
-- **Length classification**: 8 adaptive bins — <10m, [10–15), [15–20), [20–25), [25–30), [30–40), [40–50), ≥50m — designed for balanced class distribution
+- Five analysis tasks: sidewalk detection, motor vehicle counting, pedestrian entrance counting, street frontage length estimation, and vegetation type classification
+- Benchmark prompts provided as supplementary material
 
 ---
 
@@ -426,20 +428,14 @@ def set_seed(seed):
 | File | Description |
 |------|-------------|
 | `UVLM.ipynb` | Complete notebook (1 markdown cell + 3 code blocks) |
-| `bench_1_no_reasoning.ipynb` | Pre-configured benchmark: standard mode (no reasoning), hardcoded prompts |
-| `bench_2_with_reasoning.ipynb` | Pre-configured benchmark: advanced reasoning mode, hardcoded prompts, max tokens 768 |
-| `Benchmarking_by_human.xlsx` | Human ground truth scores for the 120-image benchmark dataset |
 | `README.md` | Repository landing page with quick start guide |
 | `UVLM_Project_Complete_Documentation.md` | This documentation |
-| `UVLM_Project_Complete_Documentation.docx` | This documentation (Word format) |
 | `figure1_architecture.svg` | Architecture diagram (Figure 1 from the paper) |
-| `NOTICE.md` | Third-party licenses and attributions |
+| `figure2_prompt_form.svg` | Prompt builder example (Figure 2) |
 | `VERSIONS.txt` | Version history and changelog |
 | `LICENSE` | Apache License 2.0 |
 
-**Benchmark notebook output filenames** are generated dynamically from the loaded model and GPU:  
-`Bench_{model_name}_{GPU}_{mode}.csv`  
-Example: `Bench_Qwen2.5-VL-7B-Instruct_Tesla_T4_reasoning.csv`
+The benchmark dataset (120 images), prompts, full results, and pre-configured benchmark notebooks are provided as supplementary materials alongside the paper (link to be added upon publication).
 
 ---
 
@@ -464,5 +460,5 @@ Example: `Bench_Qwen2.5-VL-7B-Instruct_Tesla_T4_reasoning.csv`
 
 ---
 
-*Document version: v2.2.2 — February 2026*
+*Document version: v2.2.2 — March 2026*
 *Corresponding author: Joan Perez (Urban Geo Analytics)*
