@@ -1,8 +1,23 @@
 UVLM — Version History
 ======================
 
-v2.2.1 (February 2026) — Current release
------------------------------------------
+v2.2.2 (March 2026) — Initial public release
+---------------------------------------------
+- Added: Truncation detection for all task types using exact generated token
+  count from model output.
+  - New CSV column: {col}_truncated.
+  - Console warning displayed when truncation is detected.
+- Updated: Advanced reasoning mode automatically overrides token limit to
+  ADVANCED_REASONING_MAX_TOKENS = 1024.
+- Updated: Max tokens slider range extended to 1500 to allow user-defined
+  reasoning budgets.
+- Updated: Consensus validation runs extended to configurable range of 2–5.
+- Fixed: Reasoning output column ({col}_reasoning) is no longer truncated.
+- Fixed: UTF-8 encoding issues when writing CSV outputs.
+- Added: Pre-configured benchmark notebooks with dynamic output filenames.
+
+v2.2.1 (February 2026)
+-----------------------
 - Fixed: NA value handling in consensus validation. The compute_consensus()
   function now properly filters out NA values (failed parses) before majority
   voting, ensuring that parsing failures do not influence the final answer.
@@ -42,11 +57,7 @@ v2.0 (November 2025)
 - Added: Per-task error handling (errors logged as "NA").
 - Added: Periodic checkpoint saves (every 5 images).
 
-v1.0 (October 2025)
---------------------
-- Initial release.
-- Dual-backend model loader: LLaVA-NeXT and Qwen2.5-VL.
-- Single-task inference with basic response parsing.
-- Precision modes: FP16, 8-bit, 4-bit quantization (BitsAndBytes).
-- Device placement: GPU-only, auto, CPU offload.
-- Hugging Face token authentication support.
+Note
+----
+Versions prior to **v2.2.2** were developed in a **private repository**.
+The public GitHub release history therefore begins at **v2.2.2**.
