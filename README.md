@@ -121,28 +121,11 @@ Block 3 detects already-processed images and skips them. New tasks added between
 
 ## 🧪 Benchmark
 
-A benchmark of **120 French streetscape images** across **8 models × 2 inference modes** (16 configurations) is included:
+UVLM has been benchmarked on **120 French streetscape images** across **8 models × 2 inference modes** (16 configurations), covering five urban analysis tasks: sidewalk detection, motor vehicle counting, pedestrian entrance counting, street frontage length estimation, and vegetation type classification.
 
-🔗 **[Dataset on Zenodo]** *(link to be added upon publication)*
+Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performance (88.0% proximity score), while LLaVA Vicuna 7B in standard mode offers a competitive alternative (83.1%) at a fraction of the computation cost. Model size does not predict performance — LLaVA 34B ranks last (62.2%).
 
-### Key Findings
-
-- **Qwen2.5-VL-32B with reasoning** achieves the best overall proximity score (88.0%)
-- **LLaVA Vicuna 7B standard** is a strong alternative (83.1%) at a fraction of the computation cost
-- Model size does not predict performance: LLaVA 34B (62.2%) ranks last
-- Qwen models have near-perfect parsing reliability (zero failures in standard mode)
-- Advanced reasoning helps Qwen models (+4.7 pp for 32B) but hurts most LLaVA models
-
-Five analysis tasks were benchmarked: sidewalk detection, motor vehicle counting, pedestrian entrance counting, street frontage length estimation, and vegetation type classification.
-
-### Benchmark Notebooks
-
-Two pre-configured notebooks replicate the benchmark without requiring manual prompt setup:
-
-| Notebook | Mode | Max tokens |
-|----------|------|------------|
-| `bench_1_no_reasoning.ipynb` | Standard | 50 |
-| `bench_2_with_reasoning.ipynb` | Advanced reasoning | 1024 |
+📄 **Full benchmark details, dataset, and supplementary materials**: *[link to arXiv paper — to be added upon publication]*
 
 ---
 
@@ -151,14 +134,9 @@ Two pre-configured notebooks replicate the benchmark without requiring manual pr
 | File | Description |
 |------|-------------|
 | [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
-| [`bench_1_no_reasoning.ipynb`](bench_1_no_reasoning.ipynb) | Benchmark notebook: standard mode |
-| [`bench_2_with_reasoning.ipynb`](bench_2_with_reasoning.ipynb) | Benchmark notebook: reasoning mode |
-| [`Benchmarking_by_human.xlsx`](Benchmarking_by_human.xlsx) | Human ground truth (120 images, 5 tasks) |
-| [`UVLM_Benchmark_Prompts.docx`](UVLM_Benchmark_Prompts.docx) | Complete prompt specifications |
-| [`UVLM_Benchmark_Report.xlsx`](UVLM_Benchmark_Report.xlsx) | Full benchmark results (16 configurations) |
 | [`figure1_architecture.svg`](figure1_architecture.svg) | Architecture diagram (Figure 1) |
+| [`figure2_prompt_form.svg`](figure2_prompt_form.svg) | Prompt builder example (Figure 2) |
 | [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
-| [`NOTICE.md`](NOTICE.md) | Third-party licenses and attributions |
 | [`VERSIONS.txt`](VERSIONS.txt) | Version history |
 | [`LICENSE`](LICENSE) | Apache License 2.0 |
 | `README.md` | This file |
