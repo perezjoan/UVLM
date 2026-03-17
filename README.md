@@ -147,7 +147,7 @@ Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performanc
 
 If you use UVLM in your research, please cite:
 
-> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. arXiv preprint.
+> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. 	arXiv:2603.13893. Available at: https://arxiv.org/abs/2603.13893
 
 ### Related Publications
 
