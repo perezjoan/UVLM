@@ -125,7 +125,7 @@ UVLM has been benchmarked on **120 French streetscape images** across **8 models
 
 Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performance (88.0% proximity score), while LLaVA Vicuna 7B in standard mode offers a competitive alternative (83.1%) at a fraction of the computation cost. Model size does not predict performance — LLaVA 34B ranks last (62.2%).
 
-📄 **Full benchmark details, dataset, and supplementary materials**: *[link to arXiv paper — to be added upon publication]*
+📄 **Full benchmark details, dataset, and supplementary materials**: *[https://arxiv.org/abs/2603.13893]*
 
 ---
 
