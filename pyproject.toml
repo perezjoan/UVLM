@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uvlm"
+version = "3.0.0"
+description = "Universal Vision-Language Model Loader for reproducible multimodal benchmarking"
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Joan Perez", email = "jperez@urbangeoanalytics.com"},
+    {name = "Giovanni Fusco"},
+]
+
+dependencies = [
+    "torch>=2.0",
+    "transformers>=4.40",
+    "accelerate>=0.20",
+    "bitsandbytes>=0.40",
+    "qwen-vl-utils",
+    "Pillow",
+    "pandas",
+    "numpy",
+    "ipywidgets>=7.0",
+    "requests",
+    "huggingface-hub",
+]
+
+[project.optional-dependencies]
+voila = ["voila>=0.5"]
+
+[project.urls]
+Homepage = "https://github.com/perezjoan/UVLM"
+Repository = "https://github.com/perezjoan/UVLM"
+
+[tool.setuptools.packages.find]
+include = ["uvlm*"]
