@@ -1,21 +1,22 @@
 # UVLM: Universal Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v2.2.2-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v3.0.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
-[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB.svg)](https://www.python.org/)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
 
-**UVLM** is an open-source Google Colab framework for **reproducible benchmarking of Vision-Language Models (VLMs)**. It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks — without writing model-specific inference code.
+**UVLM** is an open-source Python package for **reproducible benchmarking of Vision-Language Models (VLMs)**. It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks — without writing model-specific inference code.
 
 UVLM currently supports two major model families — **LLaVA-NeXT** and **Qwen2.5-VL** — which differ fundamentally in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
 
-💡 **Unified. Reproducible. Accessible. No coding required.**
+💡 **Unified. Reproducible. Accessible.**
 
 ---
 
 ## 🧠 What does UVLM do?
 
-UVLM combines model loading, prompt engineering, and batch evaluation into a single notebook:
+UVLM combines model loading, prompt engineering, and batch evaluation into a modular Python package with interactive notebook interfaces:
 
 - ✅ **11 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL models, from 3B to 110B parameters
 - 🔧 **Dual-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA or Qwen)
@@ -26,17 +27,84 @@ UVLM combines model loading, prompt engineering, and batch evaluation into a sin
 - 📊 **Batch execution** — process entire image folders with resume capability and CSV output
 - ⚡ **Quantization support** — FP16, 8-bit, and 4-bit precision via BitsAndBytes
 
-It requires **no local hardware** — everything runs on Google Colab with free-tier GPU resources.
+---
+
+## 🚀 Installation
+
+### Google Colab (zero install)
+
+Open the Colab notebook — it installs UVLM automatically:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/perezjoan/UVLM/blob/main/notebooks/UVLM_colab.ipynb)
+
+### Local Installation
+
+```bash
+pip install git+https://github.com/perezjoan/UVLM.git
+```
+
+**Note**: PyTorch with CUDA must be installed separately to match your GPU driver. For example, with CUDA 12.8+:
+
+```bash
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+pip install git+https://github.com/perezjoan/UVLM.git
+```
+
+---
+
+## 📐 Usage
+
+### Google Colab
+
+1. Open the Colab notebook (link above)
+2. Select a GPU runtime: `Runtime` → `Change runtime type` → `T4 GPU`
+3. **Run Block 1**: Select a model, choose a precision mode (4-bit recommended), click "Load model"
+4. **Run Block 2**: Define your analysis tasks using the prompt builder form
+5. **Run Block 3**: Point to an image folder on Google Drive and execute — results are saved as CSV
+
+### Local Jupyter Notebook
+
+```bash
+jupyter notebook notebooks/UVLM_local.ipynb
+```
+
+Same three-block workflow, but images are read from local folders instead of Google Drive.
+
+### Python Script (advanced)
+
+```python
+from uvlm import load_model, run_inference, parse_response
+
+ctx = load_model("[Qwen]  Qwen2.5-VL 7B Instruct", precision="4bit")
+raw, tokens = run_inference("photo.jpg", "Count the cars", ctx)
+result = parse_response(raw, "numeric")
+print(result)
+```
+
+> ⚠️ **Hugging Face token**: Some models (e.g., LLaMA3-based) require authentication. Set the `HF_TOKEN` environment variable or run `huggingface-cli login` before use.
 
 ---
 
 ## 📐 Architecture
 
-UVLM is organized into **three sequential blocks**, each handling a distinct stage of the benchmarking workflow:
+UVLM is organized as a modular Python package with interactive notebook interfaces:
 
 <p align="center">
   <img src="figure1_architecture.svg" alt="UVLM Architecture Diagram" width="100%"/>
 </p>
+
+### Package Modules
+
+| Module | Description |
+|--------|-------------|
+| `uvlm/loader.py` | Model loading with quantization and device placement |
+| `uvlm/inference.py` | Dual-backend inference (LLaVA and Qwen pipelines) |
+| `uvlm/parsers.py` | Response parsing for all four task types |
+| `uvlm/consensus.py` | Consensus validation with majority voting |
+| `uvlm/batch.py` | Batch execution engine with resume and schema upgrade |
+| `uvlm/prompts.py` | Prompt assembly and reasoning templates |
+| `uvlm/registry.py` | Model registry (11 checkpoints) |
+| `uvlm/utils.py` | Seed management, environment detection, token retrieval |
 
 ### Supported Models
 
@@ -64,26 +132,6 @@ UVLM is organized into **three sequential blocks**, each handling a distinct sta
 | `category` | Classification labels | Strips common prefixes, returns cleaned text |
 | `boolean` | Yes/no answers | Normalizes to 1/0 |
 | `text` | Free-form responses | Returns cleaned text |
-
----
-
-## 🚀 Quick Start
-
-UVLM runs entirely in **Google Colab** — no local installation needed.
-
-1. **Open the notebook** in Google Colab:
-
-   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/perezjoan/UVLM/blob/main/UVLM.ipynb)
-
-2. **Select a GPU runtime**: `Runtime` → `Change runtime type` → `T4 GPU`
-
-3. **Run Block 1**: Select a model from the dropdown, choose a precision mode (4-bit recommended), and click "Load model"
-
-4. **Run Block 2**: Define your analysis tasks using the prompt builder form — specify column names, prompts, task types, and optionally enable consensus validation. Adjust the max-token slider (up to 1,500) if your prompts require longer outputs.
-
-5. **Run Block 3**: Point to an image folder on Google Drive and execute — results are saved as CSV
-
-> ⚠️ **Hugging Face token**: Some models (e.g., LLaMA3-based) require authentication. Enable the "Use Hugging Face token" checkbox in Block 1 and paste your token.
 
 ---
 
@@ -115,7 +163,7 @@ After every inference call, the exact number of generated tokens (counted direct
 
 ### Resume-Safe Batch Processing
 
-Block 3 detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 5 images.
+The batch engine detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 3 images.
 
 ---
 
@@ -129,17 +177,32 @@ Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performanc
 
 ---
 
-## 📦 Repository Contents
+## 📦 Repository Structure
 
-| File | Description |
-|------|-------------|
-| [`UVLM.ipynb`](UVLM.ipynb) | Main notebook (all three blocks) |
-| [`figure1_architecture.svg`](figure1_architecture.svg) | Architecture diagram (Figure 1) |
-| [`figure2_prompt_form.svg`](figure2_prompt_form.svg) | Prompt builder example (Figure 2) |
-| [`UVLM_Project_Complete_Documentation.md`](UVLM_Project_Complete_Documentation.md) | Full technical documentation |
-| [`VERSIONS.txt`](VERSIONS.txt) | Version history |
-| [`LICENSE`](LICENSE) | Apache License 2.0 |
-| `README.md` | This file |
+```
+UVLM/
+├── pyproject.toml                          # Package metadata and dependencies
+├── README.md                               # This file
+├── LICENSE                                 # Apache License 2.0
+├── .gitignore
+├── uvlm/                                   # Core Python package
+│   ├── __init__.py
+│   ├── loader.py                           # Model loading
+│   ├── inference.py                        # Dual-backend inference
+│   ├── parsers.py                          # Response parsing
+│   ├── consensus.py                        # Consensus validation
+│   ├── batch.py                            # Batch execution engine
+│   ├── prompts.py                          # Prompt templates
+│   ├── registry.py                         # Model registry
+│   └── utils.py                            # Utilities
+├── notebooks/
+│   ├── UVLM_colab.ipynb                    # Google Colab interface
+│   └── UVLM_local.ipynb                    # Local Jupyter interface
+├── figure1_architecture.svg                # Architecture diagram
+├── figure2_prompt_form.svg                 # Prompt builder example
+├── UVLM_Project_Complete_Documentation.md  # Full technical documentation
+└── VERSIONS.txt                            # Version history
+```
 
 ---
 
@@ -147,7 +210,7 @@ Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performanc
 
 If you use UVLM in your research, please cite:
 
-> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. 	arXiv:2603.13893. Available at: https://arxiv.org/abs/2603.13893
+> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. arXiv:2603.13893. Available at: https://arxiv.org/abs/2603.13893
 
 ### Related Publications
 
@@ -166,8 +229,6 @@ Third-party components used in UVLM:
 - [Hugging Face Transformers](https://github.com/huggingface/transformers) — Model loading and inference (Apache 2.0)
 - [BitsAndBytes](https://github.com/bitsandbytes-foundation/bitsandbytes) — Quantization library (MIT)
 - [CLIP](https://github.com/openai/CLIP) — Vision encoder used in LLaVA (MIT)
-
-See [`NOTICE.md`](NOTICE.md) for complete attribution details.
 
 ---
 
