@@ -1,6 +1,30 @@
 UVLM — Version History
 ======================
 
+v3.0.0 (April 2026) — Package release
+--------------------------------------
+- Refactored: Monolithic Colab notebook into pip-installable Python package
+  (uvlm/) with 8 modules: loader, inference, parsers, consensus, batch,
+  prompts, registry, utils.
+- Added: Local Jupyter notebook interface (notebooks/UVLM_local.ipynb) for
+  running UVLM on local GPU hardware without Google Colab.
+- Added: Google Colab notebook interface (notebooks/UVLM_colab.ipynb) that
+  installs the uvlm package from GitHub automatically.
+- Added: Programmatic API — load_model(), run_inference(), parse_response(),
+  run_batch() can be called from any Python script without notebooks.
+- Changed: All global state eliminated. Model, processor, and backend are
+  passed as a model_ctx dict returned by load_model().
+- Changed: run_inference() now returns (raw_response, token_count) tuple
+  instead of storing token count in a global variable.
+- Added: Environment detection (is_colab()) for automatic path and token
+  handling across Colab and local deployments.
+- Added: Unified HF token retrieval via get_hf_token() — tries explicit
+  argument, Colab secrets, HF_TOKEN env var, and huggingface-cli cache.
+- Added: pyproject.toml for pip installation from GitHub.
+- Added: .gitignore for Python/Jupyter artifacts.
+- Preserved: All inference, parsing, consensus, and batch logic unchanged
+  from v2.2.2. No behavioral changes.
+
 v2.2.2 (March 2026) — Initial public release
 ---------------------------------------------
 - Added: Truncation detection for all task types using exact generated token
