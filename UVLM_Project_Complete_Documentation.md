@@ -2,11 +2,11 @@
 
 ## Executive Summary
 
-**UVLM (Universal Vision-Language Model Loader)** is a Google Colab-based benchmarking framework that provides a unified interface for loading, configuring, and evaluating multiple Vision-Language Models (VLMs) on custom image analysis tasks. The tool abstracts the substantial architectural differences between VLM families — currently LLaVA-NeXT and Qwen2.5-VL — behind a single inference function, enabling researchers to compare models using identical prompts and evaluation protocols without writing model-specific code.
+**UVLM (Universal Vision-Language Model Loader)** is a pip-installable Python package for reproducible benchmarking of Vision-Language Models (VLMs). It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks. The tool abstracts the substantial architectural differences between VLM families — currently LLaVA-NeXT and Qwen2.5-VL — behind a single inference function, enabling researchers to compare models using identical prompts and evaluation protocols without writing model-specific code.
 
-UVLM is distributed as a main Colab notebook (`UVLM.ipynb`) plus two pre-configured benchmark notebooks (`bench_1_no_reasoning.ipynb`, `bench_2_with_reasoning.ipynb`) and requires only a Google account with access to a GPU runtime.
+UVLM is distributed as a Python package (`uvlm/`) installable from GitHub, with two interactive notebook interfaces: a Google Colab notebook for zero-install cloud access and a local Jupyter notebook for researchers with their own GPU hardware.
 
-**Current version**: v2.2.2  
+**Current version**: v3.0.0  
 **License**: Apache License 2.0  
 **Repository**: https://github.com/perezjoan/UVLM  
 **Paper**: Perez, J., Fusco, G. (2026). UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking. *arXiv preprint*.
@@ -47,25 +47,72 @@ These are not superficial API variations — they reflect different transformer 
 
 ## 2. Architecture Overview
 
-### 2.1 Three-Block Design
+### 2.1 Package Structure
 
-The notebook is organized into four cells: one Markdown header (version, license, usage guide, feature summary) followed by three code cells, each handling a distinct stage of the benchmarking workflow:
+Starting with v3.0.0, UVLM is organized as a modular Python package. The core logic is split into eight modules, with interactive notebook interfaces as thin wrappers:
+
+```
+UVLM/
+├── pyproject.toml              # Package metadata and dependencies
+├── uvlm/                       # Core Python package
+│   ├── __init__.py             # Version, public API exports
+│   ├── registry.py             # Model registries (11 checkpoints)
+│   ├── loader.py               # load_model() — model + processor loading
+│   ├── inference.py            # run_inference() — dual-backend forward pass
+│   ├── parsers.py              # parse_response() — type-specific output parsing
+│   ├── consensus.py            # compute_consensus() — multi-run agreement
+│   ├── batch.py                # run_batch() — batch execution with CSV resume
+│   ├── prompts.py              # Prompt templates and assembly
+│   └── utils.py                # set_seed(), is_colab(), get_hf_token()
+├── notebooks/
+│   ├── UVLM_colab.ipynb        # Google Colab interface (installs from GitHub)
+│   └── UVLM_local.ipynb        # Local Jupyter interface (local GPU)
+```
+
+**Design principle**: Widget UI lives in the notebooks, core logic in the package. The package provides a programmatic API (`load_model`, `run_inference`, `run_batch`). The notebooks provide the interactive widget forms. This means UVLM can also be used as a plain Python library in scripts without any notebook.
+
+### 2.2 Deployment Modes
+
+#### Google Colab (zero install)
+
+The Colab notebook (`notebooks/UVLM_colab.ipynb`) installs the package automatically via `!pip install git+https://github.com/perezjoan/UVLM.git`, mounts Google Drive for image access, and retrieves the HF token from Colab secrets. Requires only a Google account with GPU runtime (T4 free-tier or A100 Pro).
+
+#### Local Jupyter Notebook
+
+The local notebook (`notebooks/UVLM_local.ipynb`) assumes the package is already installed via `pip install git+https://github.com/perezjoan/UVLM.git`. Images are read from local folders. The HF token is retrieved from the `HF_TOKEN` environment variable or `huggingface-cli login` cache. Requires a local NVIDIA GPU with CUDA.
+
+**Note**: PyTorch with CUDA must be installed separately to match the local GPU driver, e.g.: `pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128`.
+
+#### Python Script (advanced)
+
+The package can be used programmatically without any notebook:
+
+```python
+from uvlm import load_model, run_inference, parse_response
+
+ctx = load_model("[Qwen]  Qwen2.5-VL 7B Instruct", precision="4bit")
+raw, tokens = run_inference("photo.jpg", "Count the cars", ctx)
+result = parse_response(raw, "numeric")
+```
+
+### 2.3 Three-Block Workflow
+
+Both notebooks follow the same three-block workflow inherited from v2.x:
 
 #### Block 1: Model Loading & Hardware Configuration
 
 **Executed once per session.**
 
-Responsibilities:
+Calls `uvlm.load_model()` which:
 
-- Install dependencies: `transformers` (from git HEAD), `accelerate`, `bitsandbytes`, `qwen-vl-utils`
-- Present dropdown UI for model selection (11 checkpoints)
-- Auto-detect backend (LLaVA vs Qwen) from model ID
-- Load the correct processor and model classes
-- Support precision modes: FP16, 8-bit quantization, 4-bit quantization (via BitsAndBytes)
-- Configure device placement: GPU-only (`cuda:0`), auto (`accelerate` decides), or GPU + CPU offload
-- Optional Hugging Face token authentication for gated models
-- For Qwen models: configure visual token budget parameters (min/max pixel constraints)
-- Display persistent status widget with load time and device allocation
+- Auto-detects backend (LLaVA vs Qwen) from model ID via the registry
+- Loads the correct processor and model classes
+- Supports precision modes: FP16, 8-bit quantization, 4-bit quantization (via BitsAndBytes)
+- Configures device placement: GPU-only (`cuda:0`), auto (`accelerate` decides), or GPU + CPU offload
+- For Qwen models: configures visual token budget parameters (min/max pixel constraints)
+- Returns a `model_ctx` dict containing model, processor, backend, device info, and load time
+
+The `model_ctx` dict replaces all global variables from v2.x. It is passed to all subsequent functions.
 
 **Supported models:**
 
@@ -83,22 +130,19 @@ Responsibilities:
 | | 32B Instruct | 32B | `Qwen/Qwen2.5-VL-32B-Instruct` |
 | | 72B Instruct | 72B | `Qwen/Qwen2.5-VL-72B-Instruct` |
 
-**Note on large models**: The 72B and 110B checkpoints exceed single-GPU memory even with 4-bit quantization. While UVLM includes them in the registry and supports `device_map="auto"`, their effective use requires multi-GPU environments beyond free-tier Colab. Multi-GPU parallelism with batched inference is not yet implemented. In practice, models up to 34B parameters can be loaded on a single Colab GPU (T4 or A100) using 4-bit quantization.
+**Note on large models**: The 72B and 110B checkpoints exceed single-GPU memory even with 4-bit quantization. While UVLM includes them in the registry and supports `device_map="auto"`, their effective use requires multi-GPU environments. Multi-GPU parallelism with batched inference is not yet implemented. In practice, models up to 34B parameters can be loaded on a single GPU (T4, L4, or A100) using 4-bit quantization.
 
 #### Block 2: Inference Configuration & Prompt Builder
 
 **Re-executable to modify tasks and prompts.**
 
-Responsibilities:
+The notebook provides a widget-based form. The apply callback builds a `task_specs` list and generation parameters, which are passed to `run_batch()` in Block 3.
 
-- Mount Google Drive for image and output access
-- Provide widget-based multi-task prompt form (up to 10 tasks via `IntSlider`)
+- Multi-task prompt form (up to 10 tasks via `IntSlider`)
 - For each task: column name, task prompt, theory section, format specification, task type
-- Configure global generation parameters: temperature, top-p, max tokens (default: 50, range: 1–1500), optional fixed random seed
+- Global generation parameters: temperature, top-p, max tokens (default: 50, range: 1–1500), optional fixed random seed
 - Per-task toggles for consensus validation and advanced reasoning
-- Define the core `run_inference()` function (backend-agnostic forward pass)
-- Define the `parse_response()` function (type-specific output parsing)
-- Define the `compute_consensus()` function (multi-run agreement)
+- Qwen-specific pixel settings (shown conditionally when a Qwen model is loaded)
 
 **Task types:**
 
@@ -115,16 +159,16 @@ Responsibilities:
 
 **Re-executable for different image sets.**
 
-Responsibilities:
+Calls `uvlm.run_batch()` which:
 
-- Iterate over all images in a user-specified Google Drive folder
-- Execute all configured tasks sequentially for each image
-- Write results to CSV: one row per image, one column per task, plus `{col}_raw` for raw responses and `{col}_truncated` for truncation flags
-- Resume mode: detect already-processed images and skip them
-- Schema upgrading: append missing columns when new tasks are added between runs
+- Iterates over all images in a user-specified folder (Google Drive on Colab, local path on Jupyter)
+- Executes all configured tasks sequentially for each image
+- Writes results to CSV: one row per image, one column per task, plus `{col}_raw` for raw responses and `{col}_truncated` for truncation flags
+- Resume mode: detects already-processed images and skips them
+- Schema upgrading: appends missing columns when new tasks are added between runs
 - Per-task error handling: if one task fails, remaining tasks still execute; errors logged as "NA"
 - Periodic checkpoint saves (every 3 images)
-- Truncation detection on every task using exact tokenizer token count, with console alarm and CSV flag
+- Truncation detection on every task using exact token count, with console alarm and CSV flag
 
 ---
 
@@ -132,7 +176,7 @@ Responsibilities:
 
 ### 3.1 Dual-Backend Inference
 
-The `run_inference()` function routes each call to the appropriate backend based on the loaded model family. The two pipelines differ substantially:
+The `run_inference()` function routes each call to the appropriate backend based on the `model_ctx["backend"]` value. The function accepts the model context dict and returns a `(raw_response, token_count)` tuple. The two pipelines differ substantially:
 
 **LLaVA-NeXT pipeline:**
 
@@ -202,7 +246,7 @@ raw = processor.batch_decode(generated_ids_trimmed, skip_special_tokens=True,
 
 ### 3.2 Prompt Engineering
 
-Each task prompt is assembled by concatenating four user-defined fields:
+Each task prompt is assembled by the `build_prompt()` function from four user-defined fields:
 
 1. **Role** (global, shared across all tasks): Defines the model's persona
 2. **Task** (per-task): The specific question or instruction
@@ -210,15 +254,9 @@ Each task prompt is assembled by concatenating four user-defined fields:
 4. **Format** (per-task): Expected output structure
 
 ```python
-full_prompt = f"""
-{role_txt}
+from uvlm.prompts import build_prompt
 
-{task_txt}
-
-{theory_txt}
-
-{format_txt}
-""".strip()
+full_prompt = build_prompt(role_txt, task_txt, theory_txt, format_txt)
 ```
 
 When advanced reasoning is enabled for a task, the format field is automatically overridden with a structured chain-of-thought directive (see Section 3.4).
@@ -242,25 +280,11 @@ When advanced reasoning is enabled for a task, the format field is automatically
 **Output columns**: `{col}_consensus` (YES/NO), `{col}_agreement` (ratio), `{col}_runs` (JSON list of all values)
 
 ```python
-def compute_consensus(parsed_values, task_type, numeric_tolerance=0.0):
-    valid_values = [v for v in parsed_values if not is_na_value(v)]
+from uvlm.consensus import compute_consensus
 
-    if not valid_values:
-        return {"final_value": "NA", "consensus_reached": False,
-                "agreement_ratio": 0.0, "all_values": parsed_values}
-
-    if task_type == "numeric" and numeric_tolerance > 0:
-        # Group values within tolerance percentage, take largest group average
-        ...
-    else:
-        counter = Counter(valid_values)
-        final_value, agreement_count = counter.most_common(1)[0]
-
-    agreement_ratio = agreement_count / len(parsed_values)  # ALL runs, including NA
-    consensus_reached = agreement_ratio > 0.5
-
-    return {"final_value": final_value, "consensus_reached": consensus_reached,
-            "agreement_ratio": round(agreement_ratio, 2), "all_values": parsed_values}
+result = compute_consensus(parsed_values, task_type, numeric_tolerance=0.0)
+# Returns: {"final_value": ..., "consensus_reached": bool,
+#           "agreement_ratio": float, "all_values": list}
 ```
 
 **NA filtering**: The `is_na_value()` helper recognizes "NA", "N/A", "NAN", "NONE", "NULL", empty strings, and `None`. This ensures that parsing failures do not interfere with the voting process, while the agreement ratio is still computed over all runs to preserve the reliability metric.
@@ -298,11 +322,12 @@ In practice, users are encouraged to design their own reasoning prompts tailored
 
 **Purpose**: Alert the user when a model response was cut off by the token limit, which typically produces incomplete reasoning and unreliable parsed answers.
 
-**Mechanism**: The `run_inference()` function stores the exact number of generated tokens in a global variable `_last_generated_tokens`, computed directly from the model output tensor before any text decoding or cleaning. For LLaVA, this is `len(output[0]) - len(inputs["input_ids"][0])`; for Qwen, `len(generated_ids_trimmed[0])`. After each call, the truncation detector compares this count against the effective token limit:
+**Mechanism**: The `run_inference()` function returns the exact number of generated tokens as the second element of its return tuple, computed directly from the model output tensor before any text decoding or cleaning. For LLaVA, this is `len(output[0]) - len(inputs["input_ids"][0])`; for Qwen, `len(generated_ids_trimmed[0])`. The `check_truncation()` utility compares this count against the effective token limit:
 
 ```python
-def check_truncation(max_tokens: int) -> tuple:
-    return _last_generated_tokens >= max_tokens, _last_generated_tokens
+from uvlm.utils import check_truncation
+
+is_truncated, token_count = check_truncation(generated_tokens, max_tokens)
 ```
 
 This approach avoids re-tokenizing the cleaned response text, which would produce inaccurate counts for LLaVA models where the raw response may still contain prompt fragments after string-based cleaning.
@@ -312,13 +337,13 @@ This approach avoids re-tokenizing the cleaned response text, which would produc
 **Output**:
 
 - CSV column `{col}_truncated` for every task (YES/NO)
-- Console alarm: `🚨 {col}: TRUNCATION DETECTED — response used {token_count}/{max_tokens} tokens. Increase max_tokens!`
+- Console alarm: `{col}: TRUNCATION DETECTED — response used {token_count}/{max_tokens} tokens. Increase max_tokens!`
 
 This allows users to identify token budget issues across their specific prompt, task, and model combination.
 
 ### 3.6 Response Parsing
 
-All parsing functions return `"NA"` on failure:
+All parsing functions in `uvlm/parsers.py` return `"NA"` on failure:
 
 ```python
 def parse_numeric(raw):
@@ -349,11 +374,11 @@ def parse_text(raw):
 
 ```python
 header = (["image_name"]
-          + [spec["column"] for spec in TASK_SPECS]
+          + [spec["column"] for spec in task_specs]
           + reasoning_columns   # {col}_reasoning (advanced reasoning tasks only)
           + truncated_columns   # {col}_truncated (ALL tasks)
           + consensus_columns   # {col}_consensus, {col}_agreement, {col}_runs
-          + [f"{spec['column']}_raw" for spec in TASK_SPECS])
+          + [f"{spec['column']}_raw" for spec in task_specs])
 ```
 
 **Schema upgrading**: When new tasks are added between runs:
@@ -368,18 +393,20 @@ for c in missing_cols:
 
 ### 3.8 Reproducibility
 
-When the "Fixed seed" checkbox is enabled:
+When the "Fixed seed" checkbox is enabled, `set_seed()` from `uvlm/utils.py` is called:
 
 ```python
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+from uvlm.utils import set_seed
+
+set_seed(42)  # Sets random, numpy, torch, cuda, cudnn deterministic
 ```
+
+### 3.9 Environment Detection and Token Retrieval
+
+The `uvlm/utils.py` module provides environment-aware utilities:
+
+- `is_colab()`: Detects if running in Google Colab, used to adapt paths and token handling
+- `get_hf_token(token=None)`: Retrieves HuggingFace token from multiple sources in priority order: (1) explicit argument, (2) Colab secrets if in Colab, (3) `HF_TOKEN` environment variable, (4) `huggingface-cli` login cache. Returns `None` if not found, never crashes.
 
 ---
 
@@ -393,6 +420,7 @@ def set_seed(seed):
 | v2.2 | Advanced reasoning (chain-of-thought) support |
 | v2.2.1 | NA value filtering fix in consensus voting; `is_na_value()` helper ensures parsing failures do not influence majority vote |
 | v2.2.2 | Truncation detection on all tasks using exact generated token count from model output (`{col}_truncated` column + console alarm); advanced reasoning auto-overrides to `ADVANCED_REASONING_MAX_TOKENS = 1024`; max tokens slider range extended to 1500 for user-defined reasoning; consensus runs extended to 2–5; reasoning column no longer truncated; UTF-8 encoding fix; pre-configured benchmark notebooks with dynamic output filenames |
+| v3.0.0 | Refactored monolithic Colab notebook into pip-installable Python package (`uvlm/`) with 8 modules; added local Jupyter notebook interface; eliminated all global state (model_ctx dict pattern); added programmatic API for script usage; added pyproject.toml for GitHub-based pip install; added environment detection and unified HF token retrieval; no behavioral changes to inference, parsing, or consensus logic |
 
 ---
 
@@ -410,32 +438,48 @@ def set_seed(seed):
 
 | Package | Purpose |
 |---------|---------|
-| `transformers` (git HEAD) | Model loading, processors, generation |
+| `torch` | PyTorch backend (install separately with CUDA for GPU) |
+| `transformers` | Model loading, processors, generation |
 | `accelerate` | Device placement, memory management |
 | `bitsandbytes` | 4-bit and 8-bit quantization |
 | `qwen-vl-utils` | Qwen vision preprocessing (`process_vision_info`) |
-| `torch` | PyTorch backend |
 | `Pillow` | Image loading and conversion |
-| `ipywidgets` | Interactive Colab UI |
-| `pandas` | CSV management |
+| `ipywidgets` | Interactive notebook UI |
+| `pandas` | CSV management and batch output |
+| `numpy` | Numerical operations |
+| `requests` | URL-based image loading |
+| `huggingface-hub` | Token management and model downloads |
 
-**Runtime**: Google Colab with GPU (T4 free-tier or A100 Pro).
+**Runtime**: Google Colab with GPU (T4 free-tier or A100 Pro), or a local machine with an NVIDIA GPU and CUDA.
 
 ---
 
 ## 7. Repository Structure
 
-| File | Description |
-|------|-------------|
-| `UVLM.ipynb` | Complete notebook (1 markdown cell + 3 code blocks) |
-| `README.md` | Repository landing page with quick start guide |
-| `UVLM_Project_Complete_Documentation.md` | This documentation |
-| `figure1_architecture.svg` | Architecture diagram (Figure 1 from the paper) |
-| `figure2_prompt_form.svg` | Prompt builder example (Figure 2) |
-| `VERSIONS.txt` | Version history and changelog |
-| `LICENSE` | Apache License 2.0 |
-
-The benchmark dataset (120 images), prompts, full results, and pre-configured benchmark notebooks are provided as supplementary materials alongside the paper (link to be added upon publication).
+```
+UVLM/
+├── pyproject.toml                          # Package metadata and dependencies
+├── README.md                               # Repository landing page with quick start guide
+├── LICENSE                                 # Apache License 2.0
+├── .gitignore                              # Python/Jupyter artifacts
+├── uvlm/                                   # Core Python package
+│   ├── __init__.py                         # Version and public API exports
+│   ├── loader.py                           # load_model()
+│   ├── inference.py                        # run_inference()
+│   ├── parsers.py                          # parse_response(), parse_advanced_reasoning_response()
+│   ├── consensus.py                        # compute_consensus()
+│   ├── batch.py                            # run_batch()
+│   ├── prompts.py                          # TASK_TYPES, ADVANCED_REASONING_FORMATS, build_prompt()
+│   ├── registry.py                         # MODEL_CHOICES, list_models()
+│   └── utils.py                            # set_seed(), is_colab(), get_hf_token(), check_truncation()
+├── notebooks/
+│   ├── UVLM_colab.ipynb                    # Google Colab interface
+│   └── UVLM_local.ipynb                    # Local Jupyter interface
+├── figure1_architecture.svg                # Architecture diagram
+├── figure2_prompt_form.svg                 # Prompt builder example
+├── UVLM_Project_Complete_Documentation.md  # This documentation
+└── VERSIONS.txt                            # Version history and changelog
+```
 
 ---
 
@@ -444,14 +488,13 @@ The benchmark dataset (120 images), prompts, full results, and pre-configured be
 ### Current Limitations
 
 - Only supports LLaVA-NeXT and Qwen2.5-VL families
-- Google Colab dependency (single-GPU VRAM limits for free-tier)
 - Sequential image processing (no batching across images)
 - Single-image inference only (no video frame analysis)
-- Largest models (72B+) require multi-GPU setups not available on free-tier Colab
+- Largest models (72B+) require multi-GPU setups not available on free-tier Colab or most consumer GPUs
 
 ### Planned Future Work
 
-- **Additional VLM families**: InternVL, BLIP-2, CogVLM
+- **Additional VLM families**: InternVL, BLIP-2, CogVLM, DeepSeek-VL, Molmo, GLM-V
 - **Multi-GPU batching**: Parallel inference across images on multi-device setups
 - **Video frame analysis**: Temporal visual tasks
 - **API mode**: Cloud deployment for integration with automated pipelines
@@ -460,5 +503,5 @@ The benchmark dataset (120 images), prompts, full results, and pre-configured be
 
 ---
 
-*Document version: v2.2.2 — March 2026*
+*Document version: v3.0.0 — April 2026*
 *Corresponding author: Joan Perez (Urban Geo Analytics)*
