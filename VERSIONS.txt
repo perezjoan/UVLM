@@ -1,6 +1,17 @@
 UVLM — Version History
 ======================
 
+v3.0.1 (May 2026) —  fix: package discovery, transformers upper bound, device mismatch on generate
+--------------------------------------
+  - pyproject.toml: replace packages.find with explicit packages=["uvlm"] to
+    fix pip install producing UNKNOWN-0.0.0 with no module files
+  - pyproject.toml: tighten transformers to >=4.47.0,<5.0.0 — 5.x introduces
+    breaking weight conversion that crashes Qwen2.5-VL on load
+  - inference.py: fix _move_inputs_to_model_if_needed returning inputs on CPU
+    when device_map="auto" (main_device=None); fall back to cuda:0 instead,
+    fixing device mismatch crash on model.generate() with 4-bit quantization
+  - bump version to 3.0.1
+
 v3.0.0 (April 2026) — Package release
 --------------------------------------
 - Refactored: Monolithic Colab notebook into pip-installable Python package
