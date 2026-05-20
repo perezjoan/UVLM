@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uvlm"
-version = "3.0.0"
+version = "3.0.1"
 description = "Universal Vision-Language Model Loader for reproducible multimodal benchmarking"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -16,7 +16,7 @@ authors = [
 
 dependencies = [
     "torch>=2.0",
-    "transformers>=4.40",
+    "transformers>=4.47.0,<5.0.0",
     "accelerate>=0.20",
     "bitsandbytes>=0.40",
     "qwen-vl-utils",
@@ -35,5 +35,5 @@ voila = ["voila>=0.5"]
 Homepage = "https://github.com/perezjoan/UVLM"
 Repository = "https://github.com/perezjoan/UVLM"
 
-[tool.setuptools.packages.find]
-include = ["uvlm*"]
+[tool.setuptools]
+packages = ["uvlm"]
