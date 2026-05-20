@@ -2,7 +2,10 @@ def _move_inputs_to_model_if_needed(inputs: dict, model_ctx: dict) -> dict:
     import torch
     main_device = model_ctx.get("main_device")
     if main_device is None:
-        return inputs
+        if torch.cuda.is_available():
+            main_device = torch.device("cuda:0")
+        else:
+            return inputs
     return {k: (v.to(main_device) if torch.is_tensor(v) else v) for k, v in inputs.items()}
 
 
