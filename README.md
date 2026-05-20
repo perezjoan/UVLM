@@ -1,7 +1,7 @@
 # UVLM: Universal Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.0.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v3.0.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
