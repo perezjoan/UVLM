@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uvlm"
-version = "3.0.1"
-description = "Universal Vision-Language Model Loader for reproducible multimodal benchmarking"
+version = "3.0.2"
+description = "Unified Vision-Language Model"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
