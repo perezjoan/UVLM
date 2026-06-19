@@ -1,4 +1,4 @@
-# UVLM: Universal Vision-Language Model Loader
+# UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-v3.0.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
