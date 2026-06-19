@@ -1,7 +1,7 @@
 # UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.0.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v3.0.2-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
@@ -51,6 +51,34 @@ pip install git+https://github.com/perezjoan/UVLM.git
 ```
 
 ---
+
+## 🧪 Minimal Reproducible Example
+
+Requires Python ≥3.9 and an NVIDIA GPU. From a clean environment:
+
+```bash
+conda create -n uvlm python=3.11 -y
+conda activate uvlm
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
+pip install git+https://github.com/perezjoan/UVLM.git
+```
+
+```python
+import requests
+from uvlm import load_model, run_inference, parse_response
+
+# Download sample image from this repository
+url = "https://raw.githubusercontent.com/perezjoan/UVLM/main/D09.jpg"
+open("D09.jpg", "wb").write(requests.get(url).content)
+
+# Load model, run inference, parse result
+ctx = load_model("[Qwen]  Qwen2.5-VL 3B Instruct", precision="4bit")
+raw, tokens = run_inference("D09.jpg", "Count the motor vehicles in the image. Answer with only one integer number, nothing else.", ctx)
+result = parse_response(raw, "numeric")
+print(f"Result: {result}, Tokens generated: {tokens}")
+```
+
+Expected output: `Result: 2, Tokens generated: 2`
 
 ## 📐 Usage
 
@@ -185,6 +213,7 @@ UVLM/
 ├── README.md                               # This file
 ├── LICENSE                                 # Apache License 2.0
 ├── .gitignore
+├── D09.jpg                                 # Sample image for reproducible example
 ├── uvlm/                                   # Core Python package
 │   ├── __init__.py
 │   ├── loader.py                           # Model loading
