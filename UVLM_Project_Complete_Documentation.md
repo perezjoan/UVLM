@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-**UVLM (Universal Vision-Language Model Loader)** is a pip-installable Python package for reproducible benchmarking of Vision-Language Models (VLMs). It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks. The tool abstracts the substantial architectural differences between VLM families — currently LLaVA-NeXT and Qwen2.5-VL — behind a single inference function, enabling researchers to compare models using identical prompts and evaluation protocols without writing model-specific code.
+**UVLM (Unified Vision-Language Model Loader)** is a pip-installable Python package for reproducible benchmarking of Vision-Language Models (VLMs). It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks. The tool abstracts the substantial architectural differences between VLM families — currently LLaVA-NeXT and Qwen2.5-VL — behind a single inference function, enabling researchers to compare models using identical prompts and evaluation protocols without writing model-specific code.
 
 UVLM is distributed as a Python package (`uvlm/`) installable from GitHub, with two interactive notebook interfaces: a Google Colab notebook for zero-install cloud access and a local Jupyter notebook for researchers with their own GPU hardware.
 
