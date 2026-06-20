@@ -62,6 +62,7 @@ UVLM requires an NVIDIA GPU with CUDA support. Approximate VRAM requirements wit
 | 72B+ | ~40 GB+ | Multi-GPU required |
 
 Tested on: Google Colab (T4, L4, A100), Windows 11 (RTX 5060).
+
 ---
 
 ## 🧪 Minimal Reproducible Example
