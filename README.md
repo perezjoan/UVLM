@@ -53,56 +53,13 @@ pip install git+https://github.com/perezjoan/UVLM.git
 
 UVLM requires an NVIDIA GPU with CUDA support. Approximate VRAM requirements with 4-bit quantization:
 
-
-|
- Model size 
-|
- VRAM (4-bit) 
-|
- Example GPUs 
-|
-|
-------------
-|
--------------
-|
---------------
-|
-|
- 3B 
-|
- ~3 GB 
-|
- T4, RTX 3060 
-|
-|
- 7–8B 
-|
- ~5 GB 
-|
- T4, RTX 4060 
-|
-|
- 13B 
-|
- ~8 GB 
-|
- L4, RTX 4070 
-|
-|
- 32–34B 
-|
- ~20 GB 
-|
- A100, RTX 4090 
-|
-|
- 72B+ 
-|
- ~40 GB+ 
-|
- Multi-GPU required 
-|
+| Model size | VRAM (4-bit) | Example GPUs |
+|------------|-------------|--------------|
+| 3B | ~3 GB | T4, RTX 3060 |
+| 7–8B | ~5 GB | T4, RTX 4060 |
+| 13B | ~8 GB | L4, RTX 4070 |
+| 32–34B | ~20 GB | A100, RTX 4090 |
+| 72B+ | ~40 GB+ | Multi-GPU required |
 
 Tested on: Google Colab (T4, L4, A100), Windows 11 (RTX 5060).
 ---
