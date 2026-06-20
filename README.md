@@ -49,7 +49,62 @@ pip install git+https://github.com/perezjoan/UVLM.git
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 pip install git+https://github.com/perezjoan/UVLM.git
 ```
+## 💻 Hardware Requirements
 
+UVLM requires an NVIDIA GPU with CUDA support. Approximate VRAM requirements with 4-bit quantization:
+
+
+|
+ Model size 
+|
+ VRAM (4-bit) 
+|
+ Example GPUs 
+|
+|
+------------
+|
+-------------
+|
+--------------
+|
+|
+ 3B 
+|
+ ~3 GB 
+|
+ T4, RTX 3060 
+|
+|
+ 7–8B 
+|
+ ~5 GB 
+|
+ T4, RTX 4060 
+|
+|
+ 13B 
+|
+ ~8 GB 
+|
+ L4, RTX 4070 
+|
+|
+ 32–34B 
+|
+ ~20 GB 
+|
+ A100, RTX 4090 
+|
+|
+ 72B+ 
+|
+ ~40 GB+ 
+|
+ Multi-GPU required 
+|
+
+Tested on: Google Colab (T4, L4, A100), Windows 11 (RTX 5060).
 ---
 
 ## 🧪 Minimal Reproducible Example
@@ -199,7 +254,7 @@ The batch engine detects already-processed images and skips them. New tasks adde
 
 UVLM has been benchmarked on **120 French streetscape images** across **8 models × 2 inference modes** (16 configurations), covering five urban analysis tasks: sidewalk detection, motor vehicle counting, pedestrian entrance counting, street frontage length estimation, and vegetation type classification.
 
-Key findings: Qwen2.5-VL-32B with reasoning achieves the best overall performance (88.0% proximity score), while LLaVA Vicuna 7B in standard mode offers a competitive alternative (83.1%) at a fraction of the computation cost. Model size does not predict performance — LLaVA 34B ranks last (62.2%).
+Key findings: Qwen2.5-VL-32B with reasoning scored highest (88.0% proximity score), while LLaVA Vicuna 7B in standard mode offers a competitive alternative (83.1%) at a fraction of the computation cost. Model size did not predict performance in this evaluation, LLaVA 34B scored lowest (62.2%).
 
 📄 **Full benchmark details, dataset, and supplementary materials**: *[https://arxiv.org/abs/2603.13893]*
 
