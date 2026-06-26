@@ -7,6 +7,7 @@ v3.0.2 (June 2026) — Renamed to Unified, reproducible example, Zenodo archive
     reflect the tool's scope (unified interface across VLM families).
   - Added: Sample image (D09.jpg) for minimal reproducible example.
   - Added: Minimal reproducible example in README (5 lines of Python).
+  - Added: Hardware requirement per model
   - Added: Zenodo DOI for permanent code archival.
   - Updated: README to reflect naming change and add example section.
   - bump version to 3.0.2
