@@ -253,7 +253,7 @@ UVLM/
 
 If you use UVLM in your research, please cite:
 
-> Perez, J. and Fusco, G. (2026). *UVLM: A Universal Vision-Language Model Loader for Reproducible Multimodal Benchmarking*. arXiv:2603.13893. Available at: https://arxiv.org/abs/2603.13893
+> Perez, J. and Fusco, G. (2026). *UVLM: A Modular Python Package for Unified Vision–Language Model Loading, Inference and Comparison*. Software 2026, 5(3), 30. Available at: https://www.mdpi.com/2674-113X/5/3/30
 
 ### Related Publications
 
