@@ -1,6 +1,38 @@
 UVLM — Version History
 ======================
 
+v3.1.0 (August 2026) — Qwen3-VL backend, family-based model selection
+--------------------------------------
+  - Added: Qwen3-VL backend ("qwen3") supporting 4 new checkpoints:
+    Qwen3-VL 2B / 4B / 8B / 32B Instruct. The family shares the Qwen
+    inference pipeline (chat template -> process_vision_info -> generate ->
+    token trimming) and is loaded via the generic AutoModelForImageTextToText
+    class. Registry now totals 15 checkpoints across 3 families.
+  - Added: BF16-aware dtype selection for the qwen3 backend — BF16 is used
+    automatically on GPUs with native support (RTX 30xx+, L4, A100), with
+    FP16 fallback on older GPUs and FP32 on CPU. Mitigates the FP16
+    numerical-overflow crashes previously observed with BF16-trained
+    checkpoints on T4-class hardware.
+  - Added: FAMILY_GROUPS mapping in registry.py (family name -> model dict),
+    exported at package level. Adding a future family to the notebooks now
+    requires only a registry entry.
+  - Changed: Both notebooks (Colab and local) now use a two-level model
+    selector — choose the family first (LLaVA-NeXT / Qwen2.5-VL / Qwen3-VL),
+    then the model. The model list refreshes automatically per family.
+  - Added: Log output area in the local notebook (Block 1). Model download
+    progress bars and loading messages emitted inside the widget callback
+    are now displayed under the Load button (previously swallowed in local
+    Jupyter; Colab was unaffected).
+  - Changed: from_pretrained calls use the `dtype` keyword instead of the
+    deprecated `torch_dtype` (silences deprecation warnings on
+    transformers >= 4.56; identical behavior).
+  - Changed: dependency floors raised — transformers >= 4.57.0 (required by
+    Qwen3-VL) and qwen-vl-utils >= 0.0.14 (Qwen3-VL resizes images to
+    multiples of 32 px instead of 28 px). Upper bound transformers < 5.0.0
+    unchanged.
+  - Fixed: __init__.py version string synchronized with pyproject.toml
+    (previously reported 3.0.0 while the package metadata said 3.0.2).
+
 v3.0.2 (June 2026) — Renamed to Unified, reproducible example, Zenodo archive
 --------------------------------------
   - Renamed: U in UVLM changed from "Universal" to "Unified" to better

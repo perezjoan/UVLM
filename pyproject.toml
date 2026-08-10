@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "uvlm"
-version = "3.0.2"
+version = "3.1.0"
 description = "Unified Vision-Language Model"
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -16,10 +16,10 @@ authors = [
 
 dependencies = [
     "torch>=2.0",
-    "transformers>=4.47.0,<5.0.0",
+    "transformers>=4.57.0,<5.0.0",
     "accelerate>=0.20",
     "bitsandbytes>=0.40",
-    "qwen-vl-utils",
+    "qwen-vl-utils>=0.0.14",
     "Pillow",
     "pandas",
     "numpy",
