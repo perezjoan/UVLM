@@ -94,7 +94,9 @@ def run_inference(
 
         return raw, generated_token_count
 
-    if backend == "qwen":
+    if backend in ("qwen", "qwen3"):
+        # Qwen2.5-VL and Qwen3-VL share the same inference pipeline:
+        # chat template -> process_vision_info -> generate -> token trimming.
         messages = [
             {
                 "role": "user",
@@ -151,4 +153,6 @@ def run_inference(
 
         return raw, generated_token_count
 
-    raise ValueError(f"Unknown backend='{backend}'. Expected 'llava' or 'qwen'.")
+    raise ValueError(
+        f"Unknown backend='{backend}'. Expected 'llava', 'qwen', or 'qwen3'."
+    )

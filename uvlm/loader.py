@@ -75,7 +75,7 @@ def load_model(
         if quantization_config:
             model = LlavaNextForConditionalGeneration.from_pretrained(
                 model_id,
-                torch_dtype=torch.float16,
+                dtype=torch.float16,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 quantization_config=quantization_config,
                 **load_kwargs_common,
@@ -84,7 +84,7 @@ def load_model(
         else:
             model = LlavaNextForConditionalGeneration.from_pretrained(
                 model_id,
-                torch_dtype=torch.float16,
+                dtype=torch.float16,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 **load_kwargs_common,
                 **auth_kwargs,
@@ -105,7 +105,7 @@ def load_model(
         if quantization_config:
             model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
                 model_id,
-                torch_dtype=torch_dtype,
+                dtype=torch_dtype,
                 quantization_config=quantization_config,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 **load_kwargs_common,
@@ -114,11 +114,60 @@ def load_model(
         else:
             model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
                 model_id,
-                torch_dtype="auto" if precision == "fp16" else torch_dtype,
+                dtype="auto" if precision == "fp16" else torch_dtype,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 **load_kwargs_common,
                 **auth_kwargs,
             )
+    elif backend == "qwen3":
+        # Qwen3-VL: same processor conventions as Qwen2.5-VL (min/max pixel
+        # budget) but loaded via the generic AutoModelForImageTextToText class.
+        # Requires transformers >= 4.57 and qwen-vl-utils >= 0.0.14.
+        from transformers import AutoModelForImageTextToText
+
+        processor = AutoProcessor.from_pretrained(
+            model_id,
+            min_pixels=qwen_min_pixels,
+            max_pixels=qwen_max_pixels,
+            **auth_kwargs,
+        )
+
+        # Qwen3-VL is trained in BF16. Prefer BF16 when the GPU supports it
+        # natively (RTX 30xx+, A100, L4...) to avoid FP16 overflow issues;
+        # fall back to FP16 on older GPUs (e.g. T4), FP32 on CPU.
+        if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
+            torch_dtype = torch.bfloat16
+        elif torch.cuda.is_available():
+            torch_dtype = torch.float16
+        else:
+            torch_dtype = torch.float32
+
+        if quantization_config:
+            if torch_dtype == torch.bfloat16 and precision == "4bit":
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_compute_dtype=torch.bfloat16,
+                )
+            model = AutoModelForImageTextToText.from_pretrained(
+                model_id,
+                dtype=torch_dtype,
+                quantization_config=quantization_config,
+                low_cpu_mem_usage=low_cpu_mem_usage,
+                **load_kwargs_common,
+                **auth_kwargs,
+            )
+        else:
+            model = AutoModelForImageTextToText.from_pretrained(
+                model_id,
+                dtype="auto" if precision == "fp16" else torch_dtype,
+                low_cpu_mem_usage=low_cpu_mem_usage,
+                **load_kwargs_common,
+                **auth_kwargs,
+            )
+            if device_map == "cuda0" and torch.cuda.is_available():
+                model = model.to("cuda")
     else:
         raise ValueError(f"Unknown backend: {backend}")
 

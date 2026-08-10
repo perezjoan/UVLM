@@ -15,7 +15,25 @@ QWEN_MODELS = {
     "[Qwen]  Qwen2.5-VL 72B Instruct": ("qwen", "Qwen/Qwen2.5-VL-72B-Instruct"),
 }
 
-MODEL_CHOICES = {**LLAVA_MODELS, **QWEN_MODELS}
+# Qwen3-VL (released Sept 2025+). Same qwen_vl_utils pipeline as Qwen2.5-VL,
+# loaded via AutoModelForImageTextToText. Requires transformers >= 4.57 and
+# qwen-vl-utils >= 0.0.14 (images resize to multiples of 32 px, not 28 px).
+QWEN3_MODELS = {
+    "[Qwen3] Qwen3-VL 2B Instruct": ("qwen3", "Qwen/Qwen3-VL-2B-Instruct"),
+    "[Qwen3] Qwen3-VL 4B Instruct": ("qwen3", "Qwen/Qwen3-VL-4B-Instruct"),
+    "[Qwen3] Qwen3-VL 8B Instruct": ("qwen3", "Qwen/Qwen3-VL-8B-Instruct"),
+    "[Qwen3] Qwen3-VL 32B Instruct": ("qwen3", "Qwen/Qwen3-VL-32B-Instruct"),
+}
+
+MODEL_CHOICES = {**LLAVA_MODELS, **QWEN_MODELS, **QWEN3_MODELS}
+
+# Family -> model-dict mapping, used by the notebooks to build a two-level
+# (family, then model) selection widget. Add new families here.
+FAMILY_GROUPS = {
+    "LLaVA-NeXT": LLAVA_MODELS,
+    "Qwen2.5-VL": QWEN_MODELS,
+    "Qwen3-VL": QWEN3_MODELS,
+}
 
 
 def list_models() -> list:
@@ -24,7 +42,7 @@ def list_models() -> list:
 
 
 def get_backend(model_key: str) -> str:
-    """Return 'llava' or 'qwen' for a model key."""
+    """Return 'llava', 'qwen', or 'qwen3' for a model key."""
     return MODEL_CHOICES[model_key][0]
 
 
