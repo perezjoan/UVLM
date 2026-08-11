@@ -1,7 +1,7 @@
 # UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.1.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v3.2.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20917845.svg)](https://doi.org/10.5281/zenodo.20917845)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
@@ -9,7 +9,7 @@
 
 **UVLM** is an open-source Python package for **reproducible benchmarking of Vision-Language Models (VLMs)**. It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks — without writing model-specific inference code.
 
-UVLM currently supports three major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, and **Qwen3-VL** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
+UVLM currently supports four major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, **Qwen3-VL**, and **InternVL3.5** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
 
 💡 **Unified. Reproducible. Accessible.**
 
@@ -19,8 +19,8 @@ UVLM currently supports three major model families — **LLaVA-NeXT**, **Qwen2.5
 
 UVLM combines model loading, prompt engineering, and batch evaluation into a modular Python package with interactive notebook interfaces:
 
-- ✅ **15 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL + 4 Qwen3-VL models, from 2B to 110B parameters
-- 🔧 **Multi-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA-NeXT, Qwen2.5-VL, or Qwen3-VL)
+- ✅ **21 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL + 4 Qwen3-VL + 6 InternVL3.5 models, from 1B to 110B parameters
+- 🔧 **Multi-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA-NeXT, Qwen2.5-VL, Qwen3-VL, or InternVL3.5)
 - 🗂️ **Family-based model selection** — notebook widgets let you pick the model family first, then the checkpoint
 - 📝 **Multi-task prompt builder** — configure up to 10 analysis tasks per run with a widget-based UI
 - 🔁 **Consensus validation** — majority voting across 2–5 repeated inferences for improved reliability
@@ -57,7 +57,7 @@ UVLM requires an NVIDIA GPU with CUDA support. Approximate VRAM requirements wit
 
 | Model size | VRAM (4-bit) | Example GPUs |
 |------------|-------------|--------------|
-| 2B | ~2 GB | T4, RTX 3050 |
+| 1–2B | ~1–2 GB | T4, RTX 3050 |
 | 3–4B | ~3 GB | T4, RTX 3060 |
 | 7–8B | ~5 GB | T4, RTX 4060 |
 | 13B | ~8 GB | L4, RTX 4070 |
@@ -142,12 +142,12 @@ UVLM is organized as a modular Python package with interactive notebook interfac
 | Module | Description |
 |--------|-------------|
 | `uvlm/loader.py` | Model loading with quantization and device placement |
-| `uvlm/inference.py` | Multi-backend inference (LLaVA, Qwen2.5-VL, and Qwen3-VL pipelines) |
+| `uvlm/inference.py` | Multi-backend inference (LLaVA, Qwen2.5-VL, Qwen3-VL, and InternVL3.5 pipelines) |
 | `uvlm/parsers.py` | Response parsing for all four task types |
 | `uvlm/consensus.py` | Consensus validation with majority voting |
 | `uvlm/batch.py` | Batch execution engine with resume and schema upgrade |
 | `uvlm/prompts.py` | Prompt assembly and reasoning templates |
-| `uvlm/registry.py` | Model registry (15 checkpoints across 3 families) |
+| `uvlm/registry.py` | Model registry (21 checkpoints across 4 families) |
 | `uvlm/utils.py` | Seed management, environment detection, token retrieval |
 
 ### Supported Models
@@ -169,6 +169,12 @@ UVLM is organized as a modular Python package with interactive notebook interfac
 | | 4B Instruct | 4B | `Qwen/Qwen3-VL-4B-Instruct` |
 | | 8B Instruct | 8B | `Qwen/Qwen3-VL-8B-Instruct` |
 | | 32B Instruct | 32B | `Qwen/Qwen3-VL-32B-Instruct` |
+| **InternVL3.5** | 1B | 1B | `OpenGVLab/InternVL3_5-1B-HF` |
+| | 2B | 2B | `OpenGVLab/InternVL3_5-2B-HF` |
+| | 4B | 4B | `OpenGVLab/InternVL3_5-4B-HF` |
+| | 8B | 8B | `OpenGVLab/InternVL3_5-8B-HF` |
+| | 14B | 14B | `OpenGVLab/InternVL3_5-14B-HF` |
+| | 38B | 38B | `OpenGVLab/InternVL3_5-38B-HF` |
 
 > ⚠️ **Note**: Models with 72B+ parameters exceed single-GPU memory even with 4-bit quantization and require multi-GPU environments. In practice, models up to 34B can be loaded on a single Colab GPU (T4 or A100) with 4-bit quantization.
 
@@ -192,6 +198,7 @@ UVLM automatically detects the model family and routes to the correct pipeline:
 - **LLaVA-NeXT**: `LlavaNextProcessor` → joint tokenization → `model.generate()` → full decode → string-based response cleaning
 - **Qwen2.5-VL**: `AutoProcessor` + `process_vision_info()` → separate vision preprocessing → `model.generate(GenerationConfig)` → token trimming → batch decode
 - **Qwen3-VL**: shares the Qwen pipeline, loaded via the generic `AutoModelForImageTextToText` class. BF16 is used automatically on GPUs with native support (RTX 30xx+, L4, A100), with FP16 fallback otherwise. Requires `transformers >= 4.57` and `qwen-vl-utils >= 0.0.14` (installed automatically).
+- **InternVL3.5**: Transformers-native `-HF` checkpoints → tokenizing chat template (`apply_chat_template(tokenize=True)`) → `model.generate()` → prompt-token slicing → decode of the generated portion only. Same BF16-aware loading as Qwen3-VL. Not gated — no Hugging Face token required.
 
 ### Consensus Validation
 
@@ -212,7 +219,7 @@ After every inference call, the exact number of generated tokens (counted direct
 
 ### Resume-Safe Batch Processing
 
-The batch engine detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 3 images.
+The batch engine detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 3 images. Output filenames are derived from the loaded checkpoint (e.g. `Score_Analysis_Qwen3-VL-8B-Instruct.csv`), so each model writes its own CSV and resume mode is per-model.
 
 ---
 
@@ -277,6 +284,7 @@ Third-party components used in UVLM:
 - [LLaVA-NeXT](https://github.com/haotian-liu/LLaVA) — Visual instruction tuning models (Apache 2.0)
 - [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) — Vision-language models (Apache 2.0)
 - [Qwen3-VL](https://github.com/QwenLM/Qwen3-VL) — Vision-language models (Apache 2.0)
+- [InternVL](https://github.com/OpenGVLab/InternVL) — Vision-language models (MIT)
 - [Hugging Face Transformers](https://github.com/huggingface/transformers) — Model loading and inference (Apache 2.0)
 - [BitsAndBytes](https://github.com/bitsandbytes-foundation/bitsandbytes) — Quantization library (MIT)
 - [CLIP](https://github.com/openai/CLIP) — Vision encoder used in LLaVA (MIT)

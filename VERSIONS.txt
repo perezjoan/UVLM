@@ -1,6 +1,32 @@
 UVLM — Version History
 ======================
 
+v3.2.0 (August 2026) — InternVL3.5 backend, per-model output filenames
+--------------------------------------
+  - Added: InternVL3.5 backend ("internvl") supporting 6 new checkpoints:
+    InternVL3.5 1B / 2B / 4B / 8B / 14B / 38B, using the Transformers-native
+    "-HF" variants from OpenGVLab. Registry now totals 21 checkpoints across
+    4 families. The family appears automatically in the notebook selector via
+    FAMILY_GROUPS (no notebook changes required for the new family).
+  - Added: InternVL inference path in inference.py. Unlike the Qwen pipeline,
+    InternVL3.5-HF uses the standard Transformers pattern: the chat template
+    tokenizes directly (apply_chat_template with tokenize=True,
+    return_dict=True), generated tokens are sliced off after the prompt, and
+    only the generated portion is decoded. Float inputs (pixel_values) are
+    cast to the model's compute dtype so BF16, FP16, and 4-bit loads all work.
+  - Changed: loader.py — the AutoModelForImageTextToText branch now serves
+    both qwen3 and internvl backends, with the min/max pixel budget applied
+    only to Qwen3-VL. BF16-aware dtype selection applies to both families.
+  - Fixed: batch output filenames are now derived from the loaded checkpoint
+    (e.g. Score_Analysis_InternVL3_5-8B-HF.csv). Previously the notebooks
+    used a two-backend-era rule that sent every non-Qwen2.5 backend to
+    Score_Analysis_LLaVA.csv, which allowed different models to append into
+    the same CSV and contaminate resume mode. Resume and schema upgrades are
+    now per-model as a side effect. Applies to both notebooks.
+  - Notes: InternVL3.5-HF checkpoints are not gated (no Hugging Face token
+    required). No dependency changes — transformers >= 4.52.1 is required by
+    the family and already covered by the existing >= 4.57.0 floor.
+
 v3.1.0 (August 2026) — Qwen3-VL backend, family-based model selection
 --------------------------------------
   - Added: Qwen3-VL backend ("qwen3") supporting 4 new checkpoints:
