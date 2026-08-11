@@ -293,7 +293,7 @@ Third-party components used in UVLM:
 
 ## ✨ Acknowledgments
 
-This research is supported by the [emc2 project](https://emc2-dut.org/) co-funded by **ANR (France)**, **FFG (Austria)**, **MUR (Italy)**, and **Vinnova (Sweden)** under the **Driving Urban Transition Partnership**, which has been co-funded by the European Commission.
+Development of UVLM up to version 3.0.0 was supported by the emc2 project co-funded by ANR (France), FFG (Austria), MUR (Italy), and Vinnova (Sweden) under the Driving Urban Transition Partnership, which has been co-funded by the European Commission. Versions from 3.1.0 onward are developed and maintained independently by Urban Geo Analytics.
 
 ## 🏢 Developer
 
