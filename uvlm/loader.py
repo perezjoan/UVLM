@@ -119,20 +119,22 @@ def load_model(
                 **load_kwargs_common,
                 **auth_kwargs,
             )
-    elif backend == "qwen3":
-        # Qwen3-VL: same processor conventions as Qwen2.5-VL (min/max pixel
-        # budget) but loaded via the generic AutoModelForImageTextToText class.
-        # Requires transformers >= 4.57 and qwen-vl-utils >= 0.0.14.
+    elif backend in ("qwen3", "internvl"):
+        # Both families load via the generic AutoModelForImageTextToText class.
+        #   qwen3    : Qwen3-VL — keeps the Qwen min/max pixel budget;
+        #              requires transformers >= 4.57 and qwen-vl-utils >= 0.0.14.
+        #   internvl : InternVL3.5 "-HF" checkpoints — plain AutoProcessor;
+        #              requires transformers >= 4.52.1. Not gated.
         from transformers import AutoModelForImageTextToText
 
-        processor = AutoProcessor.from_pretrained(
-            model_id,
-            min_pixels=qwen_min_pixels,
-            max_pixels=qwen_max_pixels,
-            **auth_kwargs,
-        )
+        processor_kwargs = dict(auth_kwargs)
+        if backend == "qwen3":
+            processor_kwargs["min_pixels"] = qwen_min_pixels
+            processor_kwargs["max_pixels"] = qwen_max_pixels
 
-        # Qwen3-VL is trained in BF16. Prefer BF16 when the GPU supports it
+        processor = AutoProcessor.from_pretrained(model_id, **processor_kwargs)
+
+        # These families are trained in BF16. Prefer BF16 when the GPU supports it
         # natively (RTX 30xx+, A100, L4...) to avoid FP16 overflow issues;
         # fall back to FP16 on older GPUs (e.g. T4), FP32 on CPU.
         if torch.cuda.is_available() and torch.cuda.is_bf16_supported():

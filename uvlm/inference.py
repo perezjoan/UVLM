@@ -94,6 +94,60 @@ def run_inference(
 
         return raw, generated_token_count
 
+    if backend == "internvl":
+        # InternVL3.5-HF uses the standard Transformers pattern: the chat
+        # template tokenizes directly (no separate processor call), then the
+        # generated tokens are sliced off after the prompt and decoded.
+        import torch
+
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ]
+
+        inputs = processor.apply_chat_template(
+            messages,
+            add_generation_prompt=True,
+            tokenize=True,
+            return_dict=True,
+            return_tensors="pt",
+        )
+
+        inputs = _move_inputs_to_model_if_needed(dict(inputs), model_ctx)
+
+        # Cast float inputs (pixel_values) to the model's compute dtype so
+        # BF16/FP16 loads and 4-bit quantized loads both work.
+        model_dtype = getattr(model, "dtype", None)
+        if model_dtype is not None and model_dtype.is_floating_point:
+            inputs = {
+                k: (v.to(model_dtype)
+                    if torch.is_tensor(v) and v.is_floating_point() else v)
+                for k, v in inputs.items()
+            }
+
+        gen_kwargs = {
+            "max_new_tokens": int(max_new_tokens),
+            "do_sample": bool(do_sample),
+        }
+        if do_sample:
+            gen_kwargs["temperature"] = float(temperature)
+            gen_kwargs["top_p"] = float(top_p)
+
+        output = model.generate(**inputs, **gen_kwargs)
+
+        input_len = inputs["input_ids"].shape[1]
+        generated_ids = output[0][input_len:]
+        generated_token_count = len(generated_ids)
+
+        raw = processor.decode(generated_ids, skip_special_tokens=True).strip()
+
+        return raw, generated_token_count
+
     if backend in ("qwen", "qwen3"):
         # Qwen2.5-VL and Qwen3-VL share the same inference pipeline:
         # chat template -> process_vision_info -> generate -> token trimming.
@@ -154,5 +208,5 @@ def run_inference(
         return raw, generated_token_count
 
     raise ValueError(
-        f"Unknown backend='{backend}'. Expected 'llava', 'qwen', or 'qwen3'."
+        f"Unknown backend='{backend}'. Expected 'llava', 'qwen', 'qwen3', or 'internvl'."
     )

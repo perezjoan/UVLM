@@ -25,7 +25,20 @@ QWEN3_MODELS = {
     "[Qwen3] Qwen3-VL 32B Instruct": ("qwen3", "Qwen/Qwen3-VL-32B-Instruct"),
 }
 
-MODEL_CHOICES = {**LLAVA_MODELS, **QWEN_MODELS, **QWEN3_MODELS}
+# InternVL3.5 (OpenGVLab, released Aug 2025), Transformers-native "-HF"
+# checkpoints. Standard pipeline: tokenizing chat template -> generate ->
+# token slicing. Requires transformers >= 4.52.1 (covered by the >= 4.57 pin).
+# Not gated: no HF token required.
+INTERNVL_MODELS = {
+    "[InternVL] InternVL3.5 1B": ("internvl", "OpenGVLab/InternVL3_5-1B-HF"),
+    "[InternVL] InternVL3.5 2B": ("internvl", "OpenGVLab/InternVL3_5-2B-HF"),
+    "[InternVL] InternVL3.5 4B": ("internvl", "OpenGVLab/InternVL3_5-4B-HF"),
+    "[InternVL] InternVL3.5 8B": ("internvl", "OpenGVLab/InternVL3_5-8B-HF"),
+    "[InternVL] InternVL3.5 14B": ("internvl", "OpenGVLab/InternVL3_5-14B-HF"),
+    "[InternVL] InternVL3.5 38B": ("internvl", "OpenGVLab/InternVL3_5-38B-HF"),
+}
+
+MODEL_CHOICES = {**LLAVA_MODELS, **QWEN_MODELS, **QWEN3_MODELS, **INTERNVL_MODELS}
 
 # Family -> model-dict mapping, used by the notebooks to build a two-level
 # (family, then model) selection widget. Add new families here.
@@ -33,6 +46,7 @@ FAMILY_GROUPS = {
     "LLaVA-NeXT": LLAVA_MODELS,
     "Qwen2.5-VL": QWEN_MODELS,
     "Qwen3-VL": QWEN3_MODELS,
+    "InternVL3.5": INTERNVL_MODELS,
 }
 
 
@@ -42,7 +56,7 @@ def list_models() -> list:
 
 
 def get_backend(model_key: str) -> str:
-    """Return 'llava', 'qwen', or 'qwen3' for a model key."""
+    """Return 'llava', 'qwen', 'qwen3', or 'internvl' for a model key."""
     return MODEL_CHOICES[model_key][0]
 
 
