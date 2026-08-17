@@ -1,7 +1,7 @@
 # UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v3.2.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v4.0.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20917845.svg)](https://doi.org/10.5281/zenodo.20917845)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
@@ -9,7 +9,7 @@
 
 **UVLM** is an open-source Python package for **reproducible benchmarking of Vision-Language Models (VLMs)**. It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks — without writing model-specific inference code.
 
-UVLM currently supports four major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, **Qwen3-VL**, and **InternVL3.5** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
+UVLM currently supports five major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, **Qwen3-VL**, **InternVL3.5**, and **Gemma 4** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
 
 💡 **Unified. Reproducible. Accessible.**
 
@@ -19,8 +19,8 @@ UVLM currently supports four major model families — **LLaVA-NeXT**, **Qwen2.5-
 
 UVLM combines model loading, prompt engineering, and batch evaluation into a modular Python package with interactive notebook interfaces:
 
-- ✅ **21 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL + 4 Qwen3-VL + 6 InternVL3.5 models, from 1B to 110B parameters
-- 🔧 **Multi-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA-NeXT, Qwen2.5-VL, Qwen3-VL, or InternVL3.5)
+- ✅ **24 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL + 4 Qwen3-VL + 6 InternVL3.5 + 3 Gemma 4 models, from 1B to 110B parameters
+- 🔧 **Multi-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA-NeXT, Qwen2.5-VL, Qwen3-VL, InternVL3.5, or Gemma 4)
 - 🗂️ **Family-based model selection** — notebook widgets let you pick the model family first, then the checkpoint
 - 📝 **Multi-task prompt builder** — configure up to 10 analysis tasks per run with a widget-based UI
 - 🔁 **Consensus validation** — majority voting across 2–5 repeated inferences for improved reliability
@@ -44,6 +44,8 @@ Open the Colab notebook — it installs UVLM automatically:
 ```bash
 pip install git+https://github.com/perezjoan/UVLM.git
 ```
+
+> ⚠️ **Breaking change in v4**: UVLM 4.x requires `transformers >= 5.15`. If your environment must stay on transformers 4.x, install the last 3.x release instead: `pip install git+https://github.com/perezjoan/UVLM.git@v3.2.0`
 
 **Note**: PyTorch with CUDA must be installed separately to match your GPU driver. For example, with CUDA 12.8+:
 
@@ -142,12 +144,12 @@ UVLM is organized as a modular Python package with interactive notebook interfac
 | Module | Description |
 |--------|-------------|
 | `uvlm/loader.py` | Model loading with quantization and device placement |
-| `uvlm/inference.py` | Multi-backend inference (LLaVA, Qwen2.5-VL, Qwen3-VL, and InternVL3.5 pipelines) |
+| `uvlm/inference.py` | Multi-backend inference (LLaVA, Qwen2.5-VL, Qwen3-VL, InternVL3.5, and Gemma 4 pipelines) |
 | `uvlm/parsers.py` | Response parsing for all four task types |
 | `uvlm/consensus.py` | Consensus validation with majority voting |
 | `uvlm/batch.py` | Batch execution engine with resume and schema upgrade |
 | `uvlm/prompts.py` | Prompt assembly and reasoning templates |
-| `uvlm/registry.py` | Model registry (21 checkpoints across 4 families) |
+| `uvlm/registry.py` | Model registry (24 checkpoints across 5 families) |
 | `uvlm/utils.py` | Seed management, environment detection, token retrieval |
 
 ### Supported Models
@@ -175,6 +177,11 @@ UVLM is organized as a modular Python package with interactive notebook interfac
 | | 8B | 8B | `OpenGVLab/InternVL3_5-8B-HF` |
 | | 14B | 14B | `OpenGVLab/InternVL3_5-14B-HF` |
 | | 38B | 38B | `OpenGVLab/InternVL3_5-38B-HF` |
+| **Gemma 4** | E2B Instruct | ~2B effective * | `google/gemma-4-E2B-it` |
+| | E4B Instruct | ~4B effective * | `google/gemma-4-E4B-it` |
+| | 12B Instruct | 12B | `google/gemma-4-12B-it` |
+
+> \* **Gemma 4 memory profile**: E2B/E4B use Per-Layer Embeddings — the *effective* parameter count is ~2B/~4B, but raw checkpoint sizes are ~10 GB and ~16 GB. On 8 GB GPUs, run E2B in **FP16** precision (the embedding tables offload to CPU RAM in half precision; measured ~17 s/image on an RTX 5060 laptop). 4-bit mode is not usable when offload is required — offloaded modules are kept in FP32 and disk spill is unsupported by bitsandbytes; UVLM raises an explanatory error in that case. E4B and 12B require larger-VRAM environments (Colab A100/L4).
 
 > ⚠️ **Note**: Models with 72B+ parameters exceed single-GPU memory even with 4-bit quantization and require multi-GPU environments. In practice, models up to 34B can be loaded on a single Colab GPU (T4 or A100) with 4-bit quantization.
 
@@ -199,6 +206,7 @@ UVLM automatically detects the model family and routes to the correct pipeline:
 - **Qwen2.5-VL**: `AutoProcessor` + `process_vision_info()` → separate vision preprocessing → `model.generate(GenerationConfig)` → token trimming → batch decode
 - **Qwen3-VL**: shares the Qwen pipeline, loaded via the generic `AutoModelForImageTextToText` class. BF16 is used automatically on GPUs with native support (RTX 30xx+, L4, A100), with FP16 fallback otherwise. Requires `transformers >= 4.57` and `qwen-vl-utils >= 0.0.14` (installed automatically).
 - **InternVL3.5**: Transformers-native `-HF` checkpoints → tokenizing chat template (`apply_chat_template(tokenize=True)`) → `model.generate()` → prompt-token slicing → decode of the generated portion only. Same BF16-aware loading as Qwen3-VL. Not gated — no Hugging Face token required.
+- **Gemma 4**: shares the tokenizing-chat-template pipeline with InternVL3.5, plus automatic stripping of Gemma 4's thought-channel tags (emitted by models other than E2B/E4B even when thinking is disabled). Requires `transformers >= 5.15`. See the memory-profile note above for hardware guidance.
 
 ### Consensus Validation
 
@@ -285,6 +293,7 @@ Third-party components used in UVLM:
 - [Qwen2.5-VL](https://github.com/QwenLM/Qwen2.5-VL) — Vision-language models (Apache 2.0)
 - [Qwen3-VL](https://github.com/QwenLM/Qwen3-VL) — Vision-language models (Apache 2.0)
 - [InternVL](https://github.com/OpenGVLab/InternVL) — Vision-language models (MIT)
+- [Gemma 4](https://ai.google.dev/gemma) — Multimodal open models (Apache 2.0)
 - [Hugging Face Transformers](https://github.com/huggingface/transformers) — Model loading and inference (Apache 2.0)
 - [BitsAndBytes](https://github.com/bitsandbytes-foundation/bitsandbytes) — Quantization library (MIT)
 - [CLIP](https://github.com/openai/CLIP) — Vision encoder used in LLaVA (MIT)
@@ -293,7 +302,7 @@ Third-party components used in UVLM:
 
 ## ✨ Acknowledgments
 
-Development of UVLM up to version 3.0.0 was supported by the emc2 project co-funded by ANR (France), FFG (Austria), MUR (Italy), and Vinnova (Sweden) under the Driving Urban Transition Partnership, which has been co-funded by the European Commission. Versions from 3.1.0 onward are developed and maintained independently by Urban Geo Analytics.
+Development of UVLM up to **version 3.0.0** was supported by the [emc2 project](https://emc2-dut.org/) co-funded by **ANR (France)**, **FFG (Austria)**, **MUR (Italy)**, and **Vinnova (Sweden)** under the **Driving Urban Transition Partnership**, which has been co-funded by the European Commission. Versions from 3.1.0 onward are developed and maintained independently by **Urban Geo Analytics**.
 
 ## 🏢 Developer
 
