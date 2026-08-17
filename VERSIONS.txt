@@ -1,6 +1,51 @@
 UVLM — Version History
 ======================
 
+v4.0.0 (August 2026) — BREAKING: transformers 5 migration; Gemma 4 backend
+--------------------------------------
+  BREAKING CHANGE
+  - UVLM now requires transformers >= 5.15.0 (previously >= 4.57.0, < 5.0.0).
+    Gemma 4 support does not exist in any transformers 4.x release (verified:
+    4.57.6 is the final 4.x version and does not register the gemma4
+    architecture). Users who must remain on transformers 4.x should install
+    the last 3.x release:
+    pip install git+https://github.com/perezjoan/UVLM.git@v3.2.0
+  - All four pre-existing backends (LLaVA-NeXT, Qwen2.5-VL, Qwen3-VL,
+    InternVL3.5) re-validated on GPU under transformers 5.15 (RTX 5060,
+    4-bit). This includes Qwen2.5-VL, whose load-time weight-conversion crash
+    on early 5.x releases motivated the original < 5.0.0 cap (v3.0.1); the
+    issue is confirmed fixed in the 5.15 line.
+
+  NEW
+  - Added: Gemma 4 backend ("gemma4") supporting 3 checkpoints:
+    Gemma 4 E2B / E4B / 12B Instruct (google/gemma-4-{E2B,E4B,12B}-it).
+    Registry now totals 24 checkpoints across 5 families.
+  - Added: thought-channel stripping for Gemma 4 outputs. Gemma 4 models
+    other than E2B/E4B wrap responses in thought-channel tags even when
+    thinking is disabled; the gemma4 inference path keeps only the
+    final-answer segment (no-op on clean outputs).
+  - Added: CPU-offload support in the AutoModelForImageTextToText loading
+    branch (llm_int8_enable_fp32_cpu_offload) so checkpoints larger than
+    VRAM can spill non-quantized modules to system RAM. Models that fit
+    entirely on the GPU are placed exactly as before.
+  - Added: actionable error message when a 4-bit load would require disk
+    offload (unsupported by bitsandbytes), recommending precision="fp16".
+
+  MEMORY PROFILE (Gemma 4)
+  - E2B / E4B are "effective"-parameter models (Per-Layer Embeddings): raw
+    checkpoint sizes are ~10 GB and ~16 GB respectively, far above the
+    effective 2B / 4B figures. On an 8 GB GPU, E2B runs in fp16 with CPU
+    offload of the embedding tables (measured: ~17 s/image); 4-bit mode is
+    NOT usable when offload is required, because offloaded modules are kept
+    in FP32 (doubling RAM needs) and any spill to disk is unsupported by
+    bitsandbytes. E4B and 12B require larger-VRAM environments (e.g. Colab
+    A100/L4).
+
+  KNOWN UPSTREAM MESSAGES
+  - InternVL3.5 checkpoints emit a "tied weights" warning under
+    transformers 5 (config declares tied embeddings, checkpoint contains
+    both tensors); transformers keeps the checkpoint values. Harmless.
+
 v3.2.0 (August 2026) — InternVL3.5 backend, per-model output filenames
 --------------------------------------
   - Added: InternVL3.5 backend ("internvl") supporting 6 new checkpoints:
