@@ -119,12 +119,14 @@ def load_model(
                 **load_kwargs_common,
                 **auth_kwargs,
             )
-    elif backend in ("qwen3", "internvl"):
+    elif backend in ("qwen3", "internvl", "gemma4"):
         # Both families load via the generic AutoModelForImageTextToText class.
         #   qwen3    : Qwen3-VL — keeps the Qwen min/max pixel budget;
         #              requires transformers >= 4.57 and qwen-vl-utils >= 0.0.14.
-        #   internvl : InternVL3.5 "-HF" checkpoints — plain AutoProcessor;
-        #              requires transformers >= 4.52.1. Not gated.
+        #   internvl : InternVL3.5 "-HF" checkpoints — plain AutoProcessor.
+        #              Not gated.
+        #   gemma4   : Gemma 4 E2B/E4B/12B Instruct — plain AutoProcessor;
+        #              requires transformers >= 5.
         from transformers import AutoModelForImageTextToText
 
         processor_kwargs = dict(auth_kwargs)
@@ -152,6 +154,12 @@ def load_model(
                     bnb_4bit_use_double_quant=True,
                     bnb_4bit_compute_dtype=torch.bfloat16,
                 )
+            # Permit non-quantized modules to spill to CPU RAM when the
+            # checkpoint exceeds VRAM (e.g. Gemma 4's Per-Layer Embedding
+            # tables, which are lookup-only and designed to live off-GPU).
+            # This only *allows* offload — models that fit entirely on the
+            # GPU are placed exactly as before.
+            quantization_config.llm_int8_enable_fp32_cpu_offload = True
             model = AutoModelForImageTextToText.from_pretrained(
                 model_id,
                 dtype=torch_dtype,

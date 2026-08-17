@@ -1,5 +1,5 @@
 """UVLM — Universal Vision-Language Model Loader."""
-__version__ = "3.2.0"
+__version__ = "4.0.0.dev0"
 
 from .loader import load_model
 from .inference import run_inference
@@ -11,6 +11,7 @@ from .registry import (
     QWEN_MODELS,
     QWEN3_MODELS,
     INTERNVL_MODELS,
+    GEMMA4_MODELS,
     FAMILY_GROUPS,
     list_models,
 )

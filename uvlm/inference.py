@@ -94,10 +94,12 @@ def run_inference(
 
         return raw, generated_token_count
 
-    if backend == "internvl":
-        # InternVL3.5-HF uses the standard Transformers pattern: the chat
-        # template tokenizes directly (no separate processor call), then the
-        # generated tokens are sliced off after the prompt and decoded.
+    if backend in ("internvl", "gemma4"):
+        # InternVL3.5-HF and Gemma 4 use the standard Transformers pattern:
+        # the chat template tokenizes directly (no separate processor call),
+        # then the generated tokens are sliced off after the prompt and
+        # decoded. Gemma 4 12B additionally wraps its output in thought-
+        # channel tags, which are stripped below.
         import torch
 
         messages = [
@@ -145,6 +147,17 @@ def run_inference(
         generated_token_count = len(generated_ids)
 
         raw = processor.decode(generated_ids, skip_special_tokens=True).strip()
+
+        if backend == "gemma4":
+            # Gemma 4 models other than E2B/E4B emit a thought channel even
+            # with thinking disabled (possibly empty). Keep only the text
+            # after the last channel marker; harmless when markers are absent.
+            import re as _re
+            parts = _re.split(r"<\|?channel\|?>|<\|end\|?>", raw)
+            raw = parts[-1].strip() if parts else raw
+            # drop a leading "thought" label if the split left one behind
+            if raw.lower().startswith("thought"):
+                raw = raw[len("thought"):].lstrip(" :\n")
 
         return raw, generated_token_count
 
@@ -208,5 +221,5 @@ def run_inference(
         return raw, generated_token_count
 
     raise ValueError(
-        f"Unknown backend='{backend}'. Expected 'llava', 'qwen', 'qwen3', or 'internvl'."
+        f"Unknown backend='{backend}'. Expected 'llava', 'qwen', 'qwen3', 'internvl', or 'gemma4'."
     )

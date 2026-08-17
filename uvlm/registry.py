@@ -38,7 +38,25 @@ INTERNVL_MODELS = {
     "[InternVL] InternVL3.5 38B": ("internvl", "OpenGVLab/InternVL3_5-38B-HF"),
 }
 
-MODEL_CHOICES = {**LLAVA_MODELS, **QWEN_MODELS, **QWEN3_MODELS, **INTERNVL_MODELS}
+# Gemma 4 (Google DeepMind, released Apr 2026), multimodal (text + image).
+# E2B / E4B use Per-Layer Embeddings: ~2B / ~4B *effective* parameters with a
+# larger raw parameter count (embedding tables used only for lookups).
+# 12B "Unified" is encoder-free and emits thought-channel tags in its output,
+# which the gemma4 inference path strips automatically.
+# Requires transformers >= 5 (not available in any 4.x release).
+GEMMA4_MODELS = {
+    "[Gemma4] Gemma 4 E2B Instruct": ("gemma4", "google/gemma-4-E2B-it"),
+    "[Gemma4] Gemma 4 E4B Instruct": ("gemma4", "google/gemma-4-E4B-it"),
+    "[Gemma4] Gemma 4 12B Instruct": ("gemma4", "google/gemma-4-12B-it"),
+}
+
+MODEL_CHOICES = {
+    **LLAVA_MODELS,
+    **QWEN_MODELS,
+    **QWEN3_MODELS,
+    **INTERNVL_MODELS,
+    **GEMMA4_MODELS,
+}
 
 # Family -> model-dict mapping, used by the notebooks to build a two-level
 # (family, then model) selection widget. Add new families here.
@@ -47,6 +65,7 @@ FAMILY_GROUPS = {
     "Qwen2.5-VL": QWEN_MODELS,
     "Qwen3-VL": QWEN3_MODELS,
     "InternVL3.5": INTERNVL_MODELS,
+    "Gemma 4": GEMMA4_MODELS,
 }
 
 
@@ -56,7 +75,7 @@ def list_models() -> list:
 
 
 def get_backend(model_key: str) -> str:
-    """Return 'llava', 'qwen', 'qwen3', or 'internvl' for a model key."""
+    """Return 'llava', 'qwen', 'qwen3', 'internvl', or 'gemma4' for a model key."""
     return MODEL_CHOICES[model_key][0]
 
 
