@@ -2,7 +2,7 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-v4.0.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20917845.svg)](https://doi.org/10.5281/zenodo.20917845)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21975878.svg)](https://doi.org/10.5281/zenodo.21975878)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg)](https://www.python.org/)
