@@ -278,6 +278,7 @@ If you use UVLM in your research, please cite:
 > Perez, J. and Fusco, G. (2026). *UVLM: A Modular Python Package for Unified Vision–Language Model Loading, Inference and Comparison*. Software 2026, 5(3), 30. Available at: https://www.mdpi.com/2674-113X/5/3/30
 
 ### Related Publications
+> Perez, J. and Fusco, G. (2026) ‘From Street View Imagery to Street Quality Indicators: Vision Language Inference for the Suburban 15-minute City’, arXiv preprint arXiv:2608.20026. Available at: https://arxiv.org/abs/2608.20026
 
 > Perez, J. and Fusco, G. (2025). *Streetscape Analysis with Generative AI (SAGAI): Vision-Language Assessment and Mapping of Urban Scenes*. Geomatica, 77(2), 100063. Available at: https://www.sciencedirect.com/science/article/pii/S1195103625000199
 
