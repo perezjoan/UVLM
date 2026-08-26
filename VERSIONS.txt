@@ -1,6 +1,10 @@
 UVLM — Version History
 ======================
 
+v4.0.1 (August 2026)
+--------------------------------------
+Fixed: __init__.py version string shipped as "4.0.0.dev0" in the v4.0.0 release; no code changes.
+
 v4.0.0 (August 2026) — BREAKING: transformers 5 migration; Gemma 4 backend
 --------------------------------------
   BREAKING CHANGE
