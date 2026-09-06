@@ -4,6 +4,97 @@ from .registry import MODEL_CHOICES
 from .utils import is_colab, get_hf_token
 
 
+# ---------------------------------------------------------------------------
+# Vision budgets (v4.1.0)
+#
+# Every backend runs its NATIVE preprocessing by default. Budgets are
+# explicit, per-backend, expressed through each family's official
+# preprocessing parameters, and returned in the model context so run
+# manifests can record exactly what was used.
+#
+# Official knobs (transformers source, checked 2026-09):
+#   qwen/qwen3 : min_pixels / max_pixels
+#   internvl   : crop_to_patches, min_patches, max_patches
+#                (the processor class defaults force crop_to_patches=True at
+#                 call time even though the -HF checkpoint configs say false)
+#   gemma4     : max_soft_tokens in {70, 140, 280, 560, 1120} (default 280)
+#   llava      : image_grid_pinpoints (LLaVA-Next any-res grids)
+# ---------------------------------------------------------------------------
+
+_GEMMA_SOFT_TOKENS = {70, 140, 280, 560, 1120}
+
+# Cross-family parity presets. Anchor: one 448x448 InternVL tile ~0.20 MP;
+# "medium" reproduces UVLM <= 4.0.x's implicit Qwen budget (~0.5 MP) and maps
+# it to the nearest per-family equivalents.
+VISION_BUDGET_PRESETS = {
+    "low": {
+        "qwen":     {"min_pixels": 64 * 28 * 28,  "max_pixels": 256 * 28 * 28},
+        "internvl": {"crop_to_patches": True, "min_patches": 1, "max_patches": 1},
+        "gemma4":   {"max_soft_tokens": 140},
+        "llava":    {"image_grid_pinpoints": [[336, 336]]},
+    },
+    "medium": {
+        "qwen":     {"min_pixels": 256 * 28 * 28, "max_pixels": 640 * 28 * 28},
+        "internvl": {"crop_to_patches": True, "min_patches": 1, "max_patches": 3},
+        "gemma4":   {"max_soft_tokens": 280},
+        "llava":    {"image_grid_pinpoints": [[336, 672], [672, 336], [672, 672]]},
+    },
+    "high": {
+        "qwen":     {"min_pixels": 256 * 28 * 28, "max_pixels": 1280 * 28 * 28},
+        "internvl": {"crop_to_patches": True, "min_patches": 1, "max_patches": 6},
+        "gemma4":   {"max_soft_tokens": 560},
+        "llava":    {"image_grid_pinpoints": [[336, 672], [672, 336], [672, 672],
+                                              [1008, 336], [336, 1008]]},
+    },
+}
+
+
+def _resolve_vision_budget(vision_budget, backend):
+    """Return (call_time_images_kwargs, resolved_record) for this backend.
+
+    vision_budget:
+      None / "native" -> ({}, None): no overrides anywhere (the default).
+      "low"/"medium"/"high" -> the preset row for this backend.
+      dict -> raw knob overrides for THIS backend, validated and passed
+              through verbatim.
+
+    Where budgets act: qwen/qwen3 at processor init; llava at load time on
+    both the model config and the processor (the two must agree); internvl
+    and gemma4 at call time through apply_chat_template's images kwargs.
+    """
+    if vision_budget in (None, "native"):
+        return {}, None
+    if isinstance(vision_budget, str):
+        if vision_budget not in VISION_BUDGET_PRESETS:
+            raise ValueError(
+                "vision_budget must be None, 'native', one of "
+                f"{sorted(VISION_BUDGET_PRESETS)}, or a dict; got {vision_budget!r}")
+        key = "qwen" if backend in ("qwen", "qwen3") else backend
+        resolved = dict(VISION_BUDGET_PRESETS[vision_budget].get(key, {}))
+    elif isinstance(vision_budget, dict):
+        resolved = dict(vision_budget)
+    else:
+        raise TypeError(f"vision_budget: unsupported type {type(vision_budget)}")
+
+    allowed = {
+        "qwen": {"min_pixels", "max_pixels"},
+        "qwen3": {"min_pixels", "max_pixels"},
+        "internvl": {"crop_to_patches", "min_patches", "max_patches"},
+        "gemma4": {"max_soft_tokens"},
+        "llava": {"image_grid_pinpoints"},
+    }[backend]
+    bad = set(resolved) - allowed
+    if bad:
+        raise ValueError(f"vision_budget keys {sorted(bad)} are not valid for "
+                         f"backend '{backend}' (valid: {sorted(allowed)})")
+    if backend == "gemma4" and "max_soft_tokens" in resolved:
+        if resolved["max_soft_tokens"] not in _GEMMA_SOFT_TOKENS:
+            raise ValueError("gemma4 max_soft_tokens must be one of "
+                             f"{sorted(_GEMMA_SOFT_TOKENS)}")
+    return resolved, resolved
+
+
+
 def load_model(
     model_name: str,
     precision: str = "4bit",
@@ -11,15 +102,17 @@ def load_model(
     low_cpu_mem_usage: bool = True,
     hf_token=None,
     offload_folder=None,
-    qwen_min_pixels: int = 256 * 28 * 28,
-    qwen_max_pixels: int = 640 * 28 * 28,
+    vision_budget=None,
+    qwen_min_pixels: int | None = None,
+    qwen_max_pixels: int | None = None,
 ) -> dict:
     """
     Load a VLM model and processor.
 
     Returns dict with keys:
         model, processor, model_id, backend, device_map_mode, main_device,
-        gpu_name, load_time_minutes, qwen_min_pixels, qwen_max_pixels, hf_token
+        gpu_name, load_time_minutes, vision_budget, images_kwargs,
+        qwen_min_pixels, qwen_max_pixels, hf_token
     """
     import torch
     from transformers import (
@@ -43,6 +136,18 @@ def load_model(
         auth_kwargs["token"] = token
 
     backend, model_id = MODEL_CHOICES[model_name]
+
+    images_kwargs, budget_record = _resolve_vision_budget(vision_budget, backend)
+    if backend in ("qwen", "qwen3") and (qwen_min_pixels or qwen_max_pixels):
+        # Legacy qwen kwargs win over vision_budget and are recorded the same way.
+        images_kwargs = {}
+        budget_record = {}
+        if qwen_min_pixels:
+            budget_record["min_pixels"] = qwen_min_pixels
+        if qwen_max_pixels:
+            budget_record["max_pixels"] = qwen_max_pixels
+    if budget_record:
+        print(f"Vision budget ({backend}): {budget_record}")
 
     gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
 
@@ -93,12 +198,10 @@ def load_model(
                 model = model.to("cuda")
 
     elif backend == "qwen":
-        processor = AutoProcessor.from_pretrained(
-            model_id,
-            min_pixels=qwen_min_pixels,
-            max_pixels=qwen_max_pixels,
-            **auth_kwargs,
-        )
+        _qwen_proc_kwargs = dict(auth_kwargs)
+        if budget_record:
+            _qwen_proc_kwargs.update(budget_record)
+        processor = AutoProcessor.from_pretrained(model_id, **_qwen_proc_kwargs)
 
         torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -130,9 +233,16 @@ def load_model(
         from transformers import AutoModelForImageTextToText
 
         processor_kwargs = dict(auth_kwargs)
-        if backend == "qwen3":
-            processor_kwargs["min_pixels"] = qwen_min_pixels
-            processor_kwargs["max_pixels"] = qwen_max_pixels
+        if backend == "qwen3" and budget_record:
+            processor_kwargs.update(budget_record)
+
+        extra_model_kwargs = {}
+        if backend == "internvl":
+            # The -HF checkpoints ship embed_tokens and lm_head untied with
+            # different values while the config requests tying; transformers
+            # keeps them untied (correct) but warns at every load. Aligning
+            # the config removes the warning without changing behavior.
+            extra_model_kwargs["tie_word_embeddings"] = False
 
         processor = AutoProcessor.from_pretrained(model_id, **processor_kwargs)
 
@@ -154,18 +264,21 @@ def load_model(
                     bnb_4bit_use_double_quant=True,
                     bnb_4bit_compute_dtype=torch.bfloat16,
                 )
-            # Permit non-quantized modules to spill to CPU RAM when the
-            # checkpoint exceeds VRAM (e.g. Gemma 4's Per-Layer Embedding
-            # tables, which are lookup-only and designed to live off-GPU).
-            # This only *allows* offload — models that fit entirely on the
-            # GPU are placed exactly as before.
-            quantization_config.llm_int8_enable_fp32_cpu_offload = True
+            if backend == "gemma4":
+                # Gemma 4's Per-Layer Embedding tables are lookup-only and
+                # designed to live off-GPU: permit non-quantized modules to
+                # spill to CPU RAM. Scoped to Gemma so an overflowing
+                # Qwen/InternVL load fails with transformers' explicit memory
+                # error instead of dispatching quantized layers to CPU, which
+                # bitsandbytes cannot execute (meta-tensor crash).
+                quantization_config.llm_int8_enable_fp32_cpu_offload = True
             model = AutoModelForImageTextToText.from_pretrained(
                 model_id,
                 dtype=torch_dtype,
                 quantization_config=quantization_config,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 **load_kwargs_common,
+                **extra_model_kwargs,
                 **auth_kwargs,
             )
         else:
@@ -174,12 +287,23 @@ def load_model(
                 dtype="auto" if precision == "fp16" else torch_dtype,
                 low_cpu_mem_usage=low_cpu_mem_usage,
                 **load_kwargs_common,
+                **extra_model_kwargs,
                 **auth_kwargs,
             )
             if device_map == "cuda0" and torch.cuda.is_available():
                 model = model.to("cuda")
     else:
         raise ValueError(f"Unknown backend: {backend}")
+
+    if backend == "llava" and budget_record:
+        # LLaVA-Next keeps two copies of image_grid_pinpoints: the processor's
+        # (how the image is cropped) and the model config's (how many patches
+        # the model expects when splitting image features). They must agree,
+        # and at load time; overriding only the processor at call time makes
+        # generation fail with a split_with_sizes mismatch.
+        _pins = budget_record["image_grid_pinpoints"]
+        model.config.image_grid_pinpoints = _pins
+        processor.image_processor.image_grid_pinpoints = _pins
 
     print("Device map:", getattr(model, "hf_device_map", "single-device"))
 
@@ -197,6 +321,8 @@ def load_model(
         "main_device": main_device,
         "gpu_name": gpu_name,
         "load_time_minutes": load_time_minutes,
+        "vision_budget": budget_record,
+        "images_kwargs": images_kwargs if backend in ("internvl", "gemma4") else {},
         "qwen_min_pixels": qwen_min_pixels,
         "qwen_max_pixels": qwen_max_pixels,
         "hf_token": token,

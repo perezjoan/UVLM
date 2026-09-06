@@ -33,6 +33,7 @@ def run_inference(
     model = model_ctx["model"]
     processor = model_ctx["processor"]
     backend = model_ctx["backend"]
+    _ik = model_ctx.get("images_kwargs") or {}
 
     if isinstance(image_path, str) and image_path.startswith("http"):
         image = Image.open(BytesIO(requests.get(image_path).content)).convert("RGB")
@@ -58,6 +59,7 @@ def run_inference(
 
         inputs = processor(
             images=image,
+            **_ik,
             text=prompt_string,
             return_tensors="pt",
         )
@@ -118,6 +120,7 @@ def run_inference(
             tokenize=True,
             return_dict=True,
             return_tensors="pt",
+            **_ik,
         )
 
         inputs = _move_inputs_to_model_if_needed(dict(inputs), model_ctx)
