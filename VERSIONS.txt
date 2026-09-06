@@ -1,6 +1,22 @@
 UVLM — Version History
 ======================
 
+v4.1.0 (September 2026)
+--------------------------------------   
+  - New: `vision_budget` on load_model. Explicit, optional control of each
+    family's vision-token budget through the models' official preprocessing
+    parameters (Qwen pixel budget, InternVL tiling, Gemma 4 max_soft_tokens,
+    LLaVA-Next any-res grids). Presets "low"/"medium"/"high" give documented
+    cross-family parity; raw dicts pass through verbatim; the resolved
+    budget is returned in the model context for run manifests.
+  - Changed: every model now runs its NATIVE preprocessing by default.
+    Previous versions silently capped Qwen at ~0.5 MP; reproduce that with
+    vision_budget="medium" or the legacy qwen kwargs (still supported).
+  - Fixed: 4-bit CPU-offload allowance scoped to Gemma 4 (overflowing
+    Qwen/InternVL loads now fail with the standard memory error, not a
+    meta-tensor crash); InternVL config aligned with its untied checkpoints
+    (removes the per-load warning).
+
 v4.0.1 (August 2026)
 --------------------------------------
 Fixed: __init__.py version string shipped as "4.0.0.dev0" in the v4.0.0 release; no code changes.
