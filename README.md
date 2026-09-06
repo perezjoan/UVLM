@@ -1,7 +1,7 @@
 # UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v4.0.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v4.1.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21975878.svg)](https://doi.org/10.5281/zenodo.21975878)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
@@ -9,7 +9,7 @@
 
 **UVLM** is an open-source Python package for **reproducible benchmarking of Vision-Language Models (VLMs)**. It provides a unified interface for loading, configuring, and evaluating multiple VLM architectures on custom image analysis tasks — without writing model-specific inference code.
 
-UVLM currently supports five major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, **Qwen3-VL**, **InternVL3.5**, and **Gemma 4** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts and evaluation protocols**.
+UVLM currently supports five major model families — **LLaVA-NeXT**, **Qwen2.5-VL**, **Qwen3-VL**, **InternVL3.5**, and **Gemma 4** — which differ in their vision encoding, tokenization, and decoding strategies. The framework abstracts these differences behind a single inference function, enabling researchers to compare models using **identical prompts, evaluation protocols, and explicit, comparable vision budgets**.
 
 💡 **Unified. Reproducible. Accessible.**
 
@@ -21,6 +21,7 @@ UVLM combines model loading, prompt engineering, and batch evaluation into a mod
 
 - ✅ **24 VLM checkpoints** — 7 LLaVA-NeXT + 4 Qwen2.5-VL + 4 Qwen3-VL + 6 InternVL3.5 + 3 Gemma 4 models, from 1B to 110B parameters
 - 🔧 **Multi-backend abstraction** — automatically routes inference to the correct pipeline (LLaVA-NeXT, Qwen2.5-VL, Qwen3-VL, InternVL3.5, or Gemma 4)
+- 🎚️ **Vision budgets** *(new in v4.1.0)* — one parameter controlling how much of each image every family gets to see, through each model's official preprocessing knobs; presets `low`/`medium`/`high` for cross-family parity, native preprocessing by default, resolved budget recorded for manifests
 - 🗂️ **Family-based model selection** — notebook widgets let you pick the model family first, then the checkpoint
 - 📝 **Multi-task prompt builder** — configure up to 10 analysis tasks per run with a widget-based UI
 - 🔁 **Consensus validation** — majority voting across 2–5 repeated inferences for improved reliability
@@ -44,6 +45,8 @@ Open the Colab notebook — it installs UVLM automatically:
 ```bash
 pip install git+https://github.com/perezjoan/UVLM.git
 ```
+
+> ⚠️ **Behavior change in v4.1.0**: models now run their **native** preprocessing by default. Versions up to 4.0.x silently capped Qwen input at ~0.5 MP; reproduce that behavior with `vision_budget="medium"` (the legacy `qwen_min_pixels`/`qwen_max_pixels` kwargs also remain supported).
 
 > ⚠️ **Breaking change in v4**: UVLM 4.x requires `transformers >= 5.15`. If your environment must stay on transformers 4.x, install the last 3.x release instead: `pip install git+https://github.com/perezjoan/UVLM.git@v3.2.0`
 
@@ -90,7 +93,9 @@ url = "https://raw.githubusercontent.com/perezjoan/UVLM/main/D09.jpg"
 open("D09.jpg", "wb").write(requests.get(url).content)
 
 # Load model, run inference, parse result
-ctx = load_model("[Qwen]  Qwen2.5-VL 3B Instruct", precision="4bit")
+# vision_budget="medium" bounds the input resolution (recommended on GPUs
+# with 8 GB or less; omit it to run the model's native preprocessing)
+ctx = load_model("[Qwen]  Qwen2.5-VL 3B Instruct", precision="4bit", vision_budget="medium")
 raw, tokens = run_inference("D09.jpg", "Count the motor vehicles in the image. Answer with only one integer number, nothing else.", ctx)
 result = parse_response(raw, "numeric")
 print(f"Result: {result}, Tokens generated: {tokens}")
@@ -104,9 +109,8 @@ Expected output: `Result: 2, Tokens generated: 2`
 
 1. Open the Colab notebook (link above)
 2. Select a GPU runtime: `Runtime` → `Change runtime type` → `T4 GPU`
-3. **Run Block 1**: Select a model family, then a model; choose a precision mode (4-bit recommended), click "Load model"
-4. **Run Block 2**: Define your analysis tasks using the prompt builder form
-5. **Run Block 3**: Point to an image folder on Google Drive and execute — results are saved as CSV
+3. **Run Block 1**: Select a model family, then a model; choose a precision mode (4-bit recommended) and, optionally, a vision budget; click "Load model". Loading another model releases the previous one automatically, and an "Unload model" button frees the GPU on demand.
+4. **Run Block 2**: Define your analysis tasks with the prompt builder, click "Apply paths + tasks + settings" (model-independent), then "Run analysis" — the run executes against the currently loaded model and writes `Score_Analysis_<model>.csv` to the image folder on Google Drive. Switching models between runs needs no re-Apply.
 
 ### Local Jupyter Notebook
 
@@ -114,17 +118,19 @@ Expected output: `Result: 2, Tokens generated: 2`
 jupyter notebook notebooks/UVLM_local.ipynb
 ```
 
-Same three-block workflow, but images are read from local folders instead of Google Drive.
+Same two-block workflow, but images are read from local folders instead of Google Drive.
 
 ### Python Script (advanced)
 
 ```python
 from uvlm import load_model, run_inference, parse_response
 
-ctx = load_model("[Qwen]  Qwen2.5-VL 7B Instruct", precision="4bit")
+ctx = load_model("[Qwen]  Qwen2.5-VL 7B Instruct", precision="4bit",
+                 vision_budget="medium")          # or None (native), "low", "high",
+                                                  # or a raw dict, e.g. {"max_patches": 6} for InternVL
 raw, tokens = run_inference("photo.jpg", "Count the cars", ctx)
 result = parse_response(raw, "numeric")
-print(result)
+print(result, ctx["vision_budget"])               # the resolved budget travels with the context
 ```
 
 > ⚠️ **Hugging Face token**: Some models (e.g., LLaMA3-based) require authentication. Set the `HF_TOKEN` environment variable or run `huggingface-cli login` before use.
@@ -204,9 +210,33 @@ UVLM automatically detects the model family and routes to the correct pipeline:
 
 - **LLaVA-NeXT**: `LlavaNextProcessor` → joint tokenization → `model.generate()` → full decode → string-based response cleaning
 - **Qwen2.5-VL**: `AutoProcessor` + `process_vision_info()` → separate vision preprocessing → `model.generate(GenerationConfig)` → token trimming → batch decode
-- **Qwen3-VL**: shares the Qwen pipeline, loaded via the generic `AutoModelForImageTextToText` class. BF16 is used automatically on GPUs with native support (RTX 30xx+, L4, A100), with FP16 fallback otherwise. Requires `transformers >= 4.57` and `qwen-vl-utils >= 0.0.14` (installed automatically).
+- **Qwen3-VL**: shares the Qwen pipeline, loaded via the generic `AutoModelForImageTextToText` class. BF16 is used automatically on GPUs with native support (RTX 30xx+, L4, A100), with FP16 fallback otherwise. Requires `qwen-vl-utils >= 0.0.14` (installed automatically; transformers >= 5.15 is a package-wide requirement of UVLM 4.x).
 - **InternVL3.5**: Transformers-native `-HF` checkpoints → tokenizing chat template (`apply_chat_template(tokenize=True)`) → `model.generate()` → prompt-token slicing → decode of the generated portion only. Same BF16-aware loading as Qwen3-VL. Not gated — no Hugging Face token required.
 - **Gemma 4**: shares the tokenizing-chat-template pipeline with InternVL3.5, plus automatic stripping of Gemma 4's thought-channel tags (emitted by models other than E2B/E4B even when thinking is disabled). Requires `transformers >= 5.15`. See the memory-profile note above for hardware guidance.
+
+### Vision Budgets and Input Resolution *(new in v4.1.0)*
+
+Every family answers "how much of the image does the model see?" differently: Qwen resizes into a
+**pixel budget**, InternVL3.5 crops into up to N **448 px tiles**, Gemma 4 pools to a capped number of
+**soft tokens**, LLaVA-NeXT picks from an **any-resolution grid list**. `vision_budget` drives all four
+through their official knobs, applied where each architecture requires (Qwen at processor init,
+InternVL/Gemma at call time, LLaVA at load time on both the model config and the processor).
+
+- **Default = native**: no override anywhere; each model runs exactly what its authors shipped.
+- **Presets** `"low"` / `"medium"` / `"high"`: calibrated so each stop is the same class of visual
+  information across families (`"medium"` ≈ 0.5 MP ≈ 3 tiles ≈ 280 soft tokens, reproducing the
+  implicit Qwen cap of UVLM ≤ 4.0.x). Raw per-backend dicts pass through after validation.
+- **`high` is not `native`**: `high` is the top of the calibrated ladder; `native` is a heterogeneous
+  bag of author defaults (Gemma's native equals `medium`; LLaVA's native equals `high`). A benchmark
+  should state which it uses.
+- **Comparability**: a shared preset equalizes the information budget, deliberately not the
+  preprocessing architecture — each family's vision pipeline is part of what is being benchmarked.
+- **Memory**: budgets are also the VRAM lever. InternVL generation memory scales with tile count;
+  Qwen2.5-VL at native may process very large inputs on small GPUs (use a preset there). Gemma 4's
+  memory floor comes from its Per-Layer Embedding tables, not resolution.
+- **Recorded**: the resolved budget is returned in `model_ctx["vision_budget"]` for run manifests.
+
+Full mechanism tables and a worked example: see the [complete documentation](UVLM_Project_Complete_Documentation.md), Section 3.2.
 
 ### Consensus Validation
 
@@ -227,7 +257,7 @@ After every inference call, the exact number of generated tokens (counted direct
 
 ### Resume-Safe Batch Processing
 
-The batch engine detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 3 images. Output filenames are derived from the loaded checkpoint (e.g. `Score_Analysis_Qwen3-VL-8B-Instruct.csv`), so each model writes its own CSV and resume mode is per-model.
+The batch engine detects already-processed images and skips them. New tasks added between runs trigger automatic CSV schema upgrading. Checkpoints saved every 3 images. Output filenames are derived from the loaded checkpoint (e.g. `Score_Analysis_Qwen3-VL-8B-Instruct.csv`), so each model writes its own CSV and resume mode is per-model. Since v4.1.0 the run step is a button inside Block 2: Apply is model-independent, and Run resolves the loaded model (and its output CSV) at click time, so switching models between runs needs no reconfiguration.
 
 ---
 
