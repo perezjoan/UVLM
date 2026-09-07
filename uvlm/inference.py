@@ -120,7 +120,7 @@ def run_inference(
             tokenize=True,
             return_dict=True,
             return_tensors="pt",
-            **_ik,
+            **({"processor_kwargs": _ik} if _ik else {}),
         )
 
         inputs = _move_inputs_to_model_if_needed(dict(inputs), model_ctx)
