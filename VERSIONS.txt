@@ -1,6 +1,14 @@
 UVLM — Version History
 ======================
 
+v4.1.1 (September 2026)
+--------------------------------------   
+  - vision-budget kwargs for internvl/gemma4 are now passed to
+    apply_chat_template inside the explicit `processor_kwargs` dict instead of
+    loose **kwargs. transformers 5 currently honors loose kwargs but warns
+    ("Kwargs passed to `processor.__call__` have to be in `processor_kwargs`
+    dict"); this silences the warning and survives the eventual removal.
+
 v4.1.0 (September 2026)
 --------------------------------------   
   - New: `vision_budget` on load_model. Explicit, optional control of each
