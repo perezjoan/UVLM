@@ -16,7 +16,7 @@ def run_batch(
     image_folder: str,
     output_path: str,
     max_new_tokens: int = 50,
-    do_sample: bool = True,
+    do_sample: bool = False,
     temperature: float = 0.3,
     top_p: float = 0.9,
     seed=None,
@@ -27,6 +27,8 @@ def run_batch(
     """
     Process all images in a folder through all configured tasks.
     Supports resume mode, schema upgrade, consensus, and advanced reasoning.
+    Decoding is greedy by default (do_sample=False); pass do_sample=True with
+    temperature/top_p (and a seed) for sampled runs.
     Returns the final DataFrame.
     """
     from PIL import Image

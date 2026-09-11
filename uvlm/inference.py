@@ -14,12 +14,15 @@ def run_inference(
     prompt: str,
     model_ctx: dict,
     max_new_tokens: int = 50,
-    do_sample: bool = True,
+    do_sample: bool = False,
     temperature: float = 0.3,
     top_p: float = 0.9,
 ) -> tuple:
     """
     Run inference on a single image.
+
+    Decoding is greedy by default (do_sample=False) so that repeated calls are
+    reproducible; temperature and top_p only apply when do_sample=True.
 
     Returns:
         (raw_response: str, generated_token_count: int)

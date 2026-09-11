@@ -1,7 +1,7 @@
 # UVLM: Unified Vision-Language Model Loader
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-v4.1.1-brightgreen)](https://github.com/perezjoan/UVLM/releases)
+[![Version](https://img.shields.io/badge/Version-v4.2.0-brightgreen)](https://github.com/perezjoan/UVLM/releases)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21975878.svg)](https://doi.org/10.5281/zenodo.21975878)
 [![pip installable](https://img.shields.io/badge/pip-installable-blue.svg)](https://github.com/perezjoan/UVLM)
 [![Colab Compatible](https://img.shields.io/badge/Google%20Colab-Compatible-yellow.svg)](https://colab.research.google.com/)
@@ -45,6 +45,8 @@ Open the Colab notebook — it installs UVLM automatically:
 ```bash
 pip install git+https://github.com/perezjoan/UVLM.git
 ```
+
+> ⚠️ **Behavior change in v4.2.0**: decoding is **greedy by default** (`do_sample=False`) in `run_inference` and `run_batch`, so a default call is reproducible. Previous versions sampled by default (`temperature=0.3`, `top_p=0.9`). Pass `do_sample=True` (and a `seed`) to reproduce the old behavior.
 
 > ⚠️ **Behavior change in v4.1.0**: models now run their **native** preprocessing by default. Versions up to 4.0.x silently capped Qwen input at ~0.5 MP; reproduce that behavior with `vision_budget="medium"` (the legacy `qwen_min_pixels`/`qwen_max_pixels` kwargs also remain supported).
 

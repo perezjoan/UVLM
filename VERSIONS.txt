@@ -1,6 +1,17 @@
 UVLM — Version History
 ======================
 
+v4.2.0 (September 2026)
+--------------------------------------   
+  - Changed: decoding is now GREEDY by default. run_inference and run_batch
+    default to do_sample=False (previously do_sample=True with
+    temperature=0.3, top_p=0.9, which made a default call non-reproducible
+    unless a seed was passed). temperature/top_p keep their values and
+    apply only when do_sample=True. Callers that passed do_sample
+    explicitly (for example the WB Phase 1 notebooks) are unaffected.
+  - Notebooks: the "Enable sampling" checkbox in UVLM_local / UVLM_colab
+    now starts unticked to mirror the new default.
+
 v4.1.1 (September 2026)
 --------------------------------------   
   - vision-budget kwargs for internvl/gemma4 are now passed to

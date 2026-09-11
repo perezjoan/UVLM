@@ -1,5 +1,5 @@
 """UVLM — Universal Vision-Language Model Loader."""
-__version__ = "4.1.1"
+__version__ = "4.2.0"
 
 from .loader import load_model
 from .inference import run_inference
